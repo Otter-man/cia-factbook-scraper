@@ -23,10 +23,12 @@ def pdf_scraper():
     for name in os.listdir(path_to_pdf):
         filepath = os.path.join(path_to_pdf, name)
 
-        with open(filepath, "rb") as pdf_file:
-            with open(os.path.join(path_to_text, f"{name[:-3]}txt"), "w") as text_file:
+        with open(os.path.join(path_to_text, f"{name[:-3]}txt"), "w") as text_file:
 
-                text = high_level.extract_text(filepath, laparams=la_params)
-                text_file.write(text)
+            text = high_level.extract_text(filepath, laparams=la_params)
+            text_file.write(text)
 
     print("Finished scraping text")
+
+
+pdf_scraper()
