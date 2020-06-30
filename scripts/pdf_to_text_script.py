@@ -16,9 +16,9 @@ def pdf_scraper():
     # making parameters for PDFminer for this specific PDFs
     la_params = layout.LAParams(
         line_overlap=0.4,
-        char_margin=2.0,
+        char_margin=3.0,
         line_margin=1.0,
-        word_margin=0.1,
+        word_margin=0.15,
         boxes_flow=0.3,
         detect_vertical=False,
         all_texts=False,
