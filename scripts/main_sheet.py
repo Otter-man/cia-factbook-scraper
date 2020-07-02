@@ -135,18 +135,27 @@ for item in sorted(os.listdir("list_text")):
         index_dict = get_index(fields, text)
 
         if "Literacy" not in index_dict.keys():
-            main_sheet[country_id]["Literacy"] = "N/A"
+            main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
         elif country_id == "SVALBARD":
-            main_sheet[country_id]["Literacy"] = "N/A"
+            main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
             del text[index_dict["Literacy"] :]
         else:
             literacy = text[index_dict["Literacy"] :]
             del text[index_dict["Literacy"] :]
             literacy = literacy[1].split(" ")
             literacy = literacy[0], literacy[1][1:5]
+            main_sheet[country_id]["Literacy"] = literacy
 
         urbanization = text[index_dict["Urbanization"] :]
         del text[index_dict["Urbanization"] :]
-        print(text)
-        print("")
-        print("")
+        print(urbanization)
+        try:
+            urbanization = (
+                urbanization[1].split(": ")[0],
+                urbanization[1].split(" ")[2],
+                urbanization[1][-5:-1],
+            )
+        except IndexError as e:
+            urbanization = urbanization[0].split(": ")[0], "N/A", "N/A"
+
+        print(urbanization)
