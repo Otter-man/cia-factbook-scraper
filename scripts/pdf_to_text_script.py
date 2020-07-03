@@ -2,8 +2,8 @@ from pdfminer import high_level, layout
 import os
 
 
-def pdf_scraper():
-    path_to_pdf = "pdf"
+def pdf_scraper(path_to_pdf):
+
     path_to_text = "pdf_text"
     path_to_listed_text = "list_text"
 
@@ -33,14 +33,15 @@ def pdf_scraper():
             ) as list_file:
 
                 text = high_level.extract_text(filepath, laparams=la_params)
+
                 text_file.write(text)
 
-                pdf_as_list = [
-                    item for item in text.split("\n") if item != "" and item != "\x0c"
-                ]
-                list_file.write(str(pdf_as_list))
+                # pdf_as_list = [
+                # item for item in text.split("\n") if item != "" and item != "\x0c"
+                # ]
+                # list_file.write(str(pdf_as_list))
+                text = text.split()
+                list_file.write(str(text))
 
     print("Finished scraping text")
 
-
-pdf_scraper()

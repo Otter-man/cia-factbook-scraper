@@ -34,19 +34,19 @@ def get_index(fields, text):
 
             elif "Area" in str(e):
                 index_dict[item] = indexer("Area,")
-
+                print(country_id, "area")
             elif "Economic Overview" in str(e):
                 index_dict[item] = indexer("ECONOMY")
 
             elif "GDP (Purchasing Power Parity)" in str(e):
                 index_dict[item] = indexer("GDP Purchasing Power Parity)")
-
+                print(country_id, "gdp")
             elif "Religion" in str(e):
                 index_dict[item] = indexer("Religion ")
-
+                print(country_id, "religion")
             elif "Urbanization" in str(e):
                 index_dict[item] = indexer("2003Urbanization")
-
+                print(country_id, "urban")
     return index_dict
 
 
@@ -96,6 +96,7 @@ fields = [
     "Literacy",
 ]
 
+
 test = ""
 index_of_fields = {}
 main_sheet = {}
@@ -126,6 +127,7 @@ for item in sorted(os.listdir("list_text")):
                 last_update = " ".join(last_update.split(" ")[2:4])
                 main_sheet[country_id]["last_update"] = last_update
                 break
+
         # далее чистим весь документ от лишних элементов с учетом исключений
         # для этого функция cleaner
         text = cleaner(text)
@@ -141,21 +143,50 @@ for item in sorted(os.listdir("list_text")):
             del text[index_dict["Literacy"] :]
         else:
             literacy = text[index_dict["Literacy"] :]
-            del text[index_dict["Literacy"] :]
+
             literacy = literacy[1].split(" ")
             literacy = literacy[0], literacy[1][1:5]
             main_sheet[country_id]["Literacy"] = literacy
 
         urbanization = text[index_dict["Urbanization"] :]
         del text[index_dict["Urbanization"] :]
-        print(urbanization)
+
         try:
             urbanization = (
-                urbanization[1].split(": ")[0],
-                urbanization[1].split(" ")[2],
-                urbanization[1][-5:-1],
+                urbanization[1].split(" ")[2],  # urban population
+                urbanization[1].split("(")[1][:4],  # year of update for population
+                urbanization[2].split(" ")[3],  # rate of urbanization
             )
         except IndexError as e:
-            urbanization = urbanization[0].split(": ")[0], "N/A", "N/A"
+            urbanization = ("N/A", "N/A", "N/A")
 
-        print(urbanization)
+        main_sheet[country_id]["urbanization"] = urbanization
+
+        religion = text[index_dict["Religion"] + 1 :]
+        del text[index_dict["Religion"] :]
+        religion = " ".join(religion)
+        religion = " ".join(religion.split())
+        main_sheet[country_id]["religion"] = religion
+
+        language = text[index_dict["Language"] + 1 :]
+        del text[index_dict["Language"] :]
+        language = " ".join(language)
+        language = " ".join(language.split())
+        main_sheet[country_id]["language"] = language
+
+        ethnicity = text[index_dict["Ethnicity"] + 1 :]
+        del text[index_dict["Ethnicity"] :]
+        ethnicity = " ".join(ethnicity)
+        ethnicity = " ".join(ethnicity.split())
+        main_sheet[country_id]["ethnicity"] = ethnicity
+
+        pop_grow = text[index_dict["Population Growth"] + 1 :]
+        del text[index_dict["Population Growth"] :]
+        pop_grow = " ".join(pop_grow)
+        pop_grow = " ".join(pop_grow.split())
+        main_sheet[country_id]["pop_grow"] = pop_grow
+
+        population = text[index_dict["Population"] + 1 :]
+        del text[index_dict["Population"] :]
+        population = " ".join(population)
+
