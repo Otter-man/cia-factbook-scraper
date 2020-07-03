@@ -54,19 +54,21 @@ def cleaner(text):
     """this function cleans text as list from four
     recurring unnecesary elements"""
 
-    poper = text.pop
     indexer = text.index
 
-    poper(indexer("GOVERNMENT"))
-    poper(indexer("GEOGRAPHY"))
+    del text[indexer("GOVERNMENT")]
+    del text[indexer("GEOGRAPHY")]
 
-    try:
-        poper(indexer("PEOPLE & SOCIETY"))
-    except ValueError as e:
-        poper(indexer("PEOPLE & SOCIETY "))
+    pep_soc = [
+        (i, i + 3)
+        for i in range(len(text))
+        if text[i : i + 3] == ["PEOPLE", "&", "SOCIETY"]
+    ]
+    del text[pep_soc[0][0] : pep_soc[0][1]]
 
     if "Economic Overview" in str(text):
-        poper(indexer("ECONOMY"))
+        del text[indexer("ECONOMY")]
+
     return text
 
 
@@ -116,17 +118,16 @@ for item in sorted(os.listdir("list_text")):
         # ищем индекс элемент, в котором хранится данные о дате последнего апдейта пдф.
         # т.к. ищем мы по неточному значению, то может быть несколько подходящих индексов
         last_update_index = [
-            num for num, string in enumerate(text) if "as of" in string
+            (i, i + 2) for i in range(len(text)) if text[i : i + 2] == ["as", "of"]
         ]
 
-        # мы определяем нужный элемент по длине стринга
-        # и форматируем их, чтобы оставить только месяц и год  изменения.
-        for number in last_update_index:
-            if len(text[number]) < 22:
-                last_update = text.pop(number)
-                last_update = " ".join(last_update.split(" ")[2:4])
-                main_sheet[country_id]["last_update"] = last_update
-                break
+        last_update = " ".join(
+            text[last_update_index[0][1] : last_update_index[0][1] + 2]
+        )
+
+        del text[last_update_index[0][0] : last_update_index[0][0] + 4]
+
+        main_sheet[country_id]["last_update"] = last_update
 
         # далее чистим весь документ от лишних элементов с учетом исключений
         # для этого функция cleaner
@@ -134,59 +135,70 @@ for item in sorted(os.listdir("list_text")):
 
         # далее получаем для каждой строки индекс и будем работать от него
         # функция get index для этого
-        index_dict = get_index(fields, text)
+        # index_dict = get_index(fields, text)
+        if country_id == "RUSSIA":
+            print(index_dict)
+        # нужно переписать функцию index_dict с учетом того, что новый список состоит из отдельных слов.
 
-        if "Literacy" not in index_dict.keys():
-            main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
-        elif country_id == "SVALBARD":
-            main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
-            del text[index_dict["Literacy"] :]
-        else:
-            literacy = text[index_dict["Literacy"] :]
+        # if "Literacy" not in index_dict.keys():
+        #     main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
+        # elif country_id == "SVALBARD":
+        #     main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
+        #     del text[index_dict["Literacy"] :]
+        # else:
+        #     literacy = text[index_dict["Literacy"] :]
 
-            literacy = literacy[1].split(" ")
-            literacy = literacy[0], literacy[1][1:5]
-            main_sheet[country_id]["Literacy"] = literacy
+        #     literacy = literacy[1].split(" ")
+        #     literacy = literacy[0], literacy[1][1:5]
+        #     main_sheet[country_id]["Literacy"] = literacy
 
-        urbanization = text[index_dict["Urbanization"] :]
-        del text[index_dict["Urbanization"] :]
+        # urbanization = text[index_dict["Urbanization"] :]
+        # del text[index_dict["Urbanization"] :]
 
-        try:
-            urbanization = (
-                urbanization[1].split(" ")[2],  # urban population
-                urbanization[1].split("(")[1][:4],  # year of update for population
-                urbanization[2].split(" ")[3],  # rate of urbanization
-            )
-        except IndexError as e:
-            urbanization = ("N/A", "N/A", "N/A")
+        # try:
+        #     urbanization = (
+        #         urbanization[1].split(" ")[2],  # urban population
+        #         urbanization[1].split("(")[1][:4],  # year of update for population
+        #         urbanization[2].split(" ")[3],  # rate of urbanization
+        #     )
+        # except IndexError as e:
+        #     urbanization = ("N/A", "N/A", "N/A")
 
-        main_sheet[country_id]["urbanization"] = urbanization
+        # main_sheet[country_id]["urbanization"] = urbanization
 
-        religion = text[index_dict["Religion"] + 1 :]
-        del text[index_dict["Religion"] :]
-        religion = " ".join(religion)
-        religion = " ".join(religion.split())
-        main_sheet[country_id]["religion"] = religion
+        # religion = text[index_dict["Religion"] + 1 :]
+        # del text[index_dict["Religion"] :]
+        # religion = " ".join(religion)
+        # religion = " ".join(religion.split())
+        # main_sheet[country_id]["religion"] = religion
 
-        language = text[index_dict["Language"] + 1 :]
-        del text[index_dict["Language"] :]
-        language = " ".join(language)
-        language = " ".join(language.split())
-        main_sheet[country_id]["language"] = language
+        # language = text[index_dict["Language"] + 1 :]
+        # del text[index_dict["Language"] :]
+        # language = " ".join(language)
+        # language = " ".join(language.split())
+        # main_sheet[country_id]["language"] = language
 
-        ethnicity = text[index_dict["Ethnicity"] + 1 :]
-        del text[index_dict["Ethnicity"] :]
-        ethnicity = " ".join(ethnicity)
-        ethnicity = " ".join(ethnicity.split())
-        main_sheet[country_id]["ethnicity"] = ethnicity
+        # ethnicity = text[index_dict["Ethnicity"] + 1 :]
+        # del text[index_dict["Ethnicity"] :]
+        # ethnicity = " ".join(ethnicity)
+        # ethnicity = " ".join(ethnicity.split())
+        # main_sheet[country_id]["ethnicity"] = ethnicity
 
-        pop_grow = text[index_dict["Population Growth"] + 1 :]
-        del text[index_dict["Population Growth"] :]
-        pop_grow = " ".join(pop_grow)
-        pop_grow = " ".join(pop_grow.split())
-        main_sheet[country_id]["pop_grow"] = pop_grow
+        # pop_grow = text[index_dict["Population Growth"] + 1 :]
+        # del text[index_dict["Population Growth"] :]
+        # pop_grow = " ".join(pop_grow)
+        # pop_grow = " ".join(pop_grow.split())
+        # main_sheet[country_id]["pop_grow"] = pop_grow
 
-        population = text[index_dict["Population"] + 1 :]
-        del text[index_dict["Population"] :]
-        population = " ".join(population)
+        # population = text[index_dict["Population"] + 1 :]
+        # del text[index_dict["Population"] :]
+        # population = " ".join(population)
 
+        # мы определяем нужный элемент по длине стринга
+        # и форматируем их, чтобы оставить только месяц и год  изменения.
+        # for number in last_update_index:
+        #     if len(text[number]) < 22:
+        #         last_update = text.pop(number)
+        #         last_update = " ".join(last_update.split(" ")[2:4])
+        #         main_sheet[country_id]["last_update"] = last_update
+        #         break
