@@ -4,5 +4,5 @@ from pdf_download import pdf_link_scraper, download_pdf
 
 links = pdf_link_scraper()
 download_pdf(links)
-pdf_scraper()
+pdf_scraper("pdf")
 
