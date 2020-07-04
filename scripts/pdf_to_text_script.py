@@ -39,6 +39,8 @@ def pdf_scraper(path_to_pdf):
                 text = text.split("\n", 1)
 
                 country = text.pop(0)
+                if country == "SAO TOMEAND PRINCIPE":
+                    country == "SAO TOME AND PRINCIPE"
 
                 text = text[0].split()
                 text = [country] + text
