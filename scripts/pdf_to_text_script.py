@@ -40,7 +40,7 @@ def pdf_scraper(path_to_pdf):
 
                 country = text.pop(0)
                 if country == "SAO TOMEAND PRINCIPE":
-                    country == "SAO TOME AND PRINCIPE"
+                    country = "SAO TOME AND PRINCIPE"
 
                 text = text[0].split()
                 text = [country] + text
@@ -48,4 +48,3 @@ def pdf_scraper(path_to_pdf):
                 list_file.write(str(text))
 
     print("Finished scraping text")
-
