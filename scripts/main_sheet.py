@@ -3,50 +3,42 @@ import ast
 import re
 
 ###раздел для функций
-def get_index(fields, text):
+def get_index(fields, text, country_id):
     """this function builds dict of indexes
     for every country with indexes of elements,
     that represent the fields in the base"""
-
-    indexer = text.index
 
     index_dict = {}
 
     for item in fields:
 
-        try:
-            index_dict[item] = indexer(item)
+        item_list = item.split()
 
-        except ValueError as e:
-            if (
-                "Chief of State" in str(e)
-                or "Head of Government" in str(e)
-                or "Capital" in str(e)
-                or "Ambassador to US" in str(e)
-            ):
-                index_dict[item] = -1
+        # исключения для некоторых страниц с ошибкой в заполнении.
+        if country_id == "GERMANY" and item == "GDP (Purchasing Power Parity)":
+            item_list = "GDP Purchasing Power Parity)".split()
+        elif country_id == "MOLDOVA" and item == "US Ambassador":
+            item_list = ["Ambassador"]
+        elif country_id == "IRAQ" and item == "Area":
+            item_list = ["Area,"]
+        elif country_id == "IRAQ" and item == "Urbanization":
+            item_list = ["2003Urbanization"]
+        elif country_id == "TURKMENISTAN" or country_id == "MAURITIUS":
+            item_list = ["ECONOMY"]
 
-            elif "US Ambassador" in str(e) and country_id == "UNITED STATES":
-                index_dict[item] = -1
+        index = [
+            (i, i + len(item_list))
+            for i in range(len(text))
+            if text[i : i + len(item_list)] == item_list
+        ]
 
-            elif "US Ambassador" in str(e) and country_id == "MOLDOVA":
-                index_dict[item] = indexer("Ambassador")
+        if len(index) > 1 and item == "US Ambassador":
+            index = [i for i in index[1]]
+        elif len(index) > 0:
+            index = [i for i in index[0]]
 
-            elif "Area" in str(e):
-                index_dict[item] = indexer("Area,")
-                print(country_id, "area")
-            elif "Economic Overview" in str(e):
-                index_dict[item] = indexer("ECONOMY")
+        index_dict[item] = index
 
-            elif "GDP (Purchasing Power Parity)" in str(e):
-                index_dict[item] = indexer("GDP Purchasing Power Parity)")
-                print(country_id, "gdp")
-            elif "Religion" in str(e):
-                index_dict[item] = indexer("Religion ")
-                print(country_id, "religion")
-            elif "Urbanization" in str(e):
-                index_dict[item] = indexer("2003Urbanization")
-                print(country_id, "urban")
     return index_dict
 
 
@@ -135,9 +127,11 @@ for item in sorted(os.listdir("list_text")):
 
         # далее получаем для каждой строки индекс и будем работать от него
         # функция get index для этого
-        # index_dict = get_index(fields, text)
-        if country_id == "RUSSIA":
-            print(index_dict)
+        print(country_id)
+        index_dict = get_index(fields, text, country_id)
+        print(index_dict)
+        print(" ")
+
         # нужно переписать функцию index_dict с учетом того, что новый список состоит из отдельных слов.
 
         # if "Literacy" not in index_dict.keys():
