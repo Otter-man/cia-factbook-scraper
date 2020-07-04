@@ -36,11 +36,13 @@ def pdf_scraper(path_to_pdf):
 
                 text_file.write(text)
 
-                # pdf_as_list = [
-                # item for item in text.split("\n") if item != "" and item != "\x0c"
-                # ]
-                # list_file.write(str(pdf_as_list))
-                text = text.split()
+                text = text.split("\n", 1)
+
+                country = text.pop(0)
+
+                text = text[0].split()
+                text = [country] + text
+
                 list_file.write(str(text))
 
     print("Finished scraping text")
