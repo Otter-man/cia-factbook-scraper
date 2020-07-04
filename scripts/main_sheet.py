@@ -23,7 +23,9 @@ def get_index(fields, text, country_id):
             item_list = ["Area,"]
         elif country_id == "IRAQ" and item == "Urbanization":
             item_list = ["2003Urbanization"]
-        elif country_id == "TURKMENISTAN" or country_id == "MAURITIUS":
+        elif (
+            country_id == "TURKMENISTAN" or country_id == "MAURITIUS"
+        ) and item == "Economic Overview":
             item_list = ["ECONOMY"]
 
         index = [
@@ -127,72 +129,16 @@ for item in sorted(os.listdir("list_text")):
 
         # далее получаем для каждой строки индекс и будем работать от него
         # функция get index для этого
-        print(country_id)
+
         index_dict = get_index(fields, text, country_id)
-        print(index_dict)
-        print(" ")
 
-        # нужно переписать функцию index_dict с учетом того, что новый список состоит из отдельных слов.
+        for item in fields[::-1]:
 
-        # if "Literacy" not in index_dict.keys():
-        #     main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
-        # elif country_id == "SVALBARD":
-        #     main_sheet[country_id]["Literacy"] = ("N/A", "N/A")
-        #     del text[index_dict["Literacy"] :]
-        # else:
-        #     literacy = text[index_dict["Literacy"] :]
+            main_sheet[country_id][item] = []
 
-        #     literacy = literacy[1].split(" ")
-        #     literacy = literacy[0], literacy[1][1:5]
-        #     main_sheet[country_id]["Literacy"] = literacy
-
-        # urbanization = text[index_dict["Urbanization"] :]
-        # del text[index_dict["Urbanization"] :]
-
-        # try:
-        #     urbanization = (
-        #         urbanization[1].split(" ")[2],  # urban population
-        #         urbanization[1].split("(")[1][:4],  # year of update for population
-        #         urbanization[2].split(" ")[3],  # rate of urbanization
-        #     )
-        # except IndexError as e:
-        #     urbanization = ("N/A", "N/A", "N/A")
-
-        # main_sheet[country_id]["urbanization"] = urbanization
-
-        # religion = text[index_dict["Religion"] + 1 :]
-        # del text[index_dict["Religion"] :]
-        # religion = " ".join(religion)
-        # religion = " ".join(religion.split())
-        # main_sheet[country_id]["religion"] = religion
-
-        # language = text[index_dict["Language"] + 1 :]
-        # del text[index_dict["Language"] :]
-        # language = " ".join(language)
-        # language = " ".join(language.split())
-        # main_sheet[country_id]["language"] = language
-
-        # ethnicity = text[index_dict["Ethnicity"] + 1 :]
-        # del text[index_dict["Ethnicity"] :]
-        # ethnicity = " ".join(ethnicity)
-        # ethnicity = " ".join(ethnicity.split())
-        # main_sheet[country_id]["ethnicity"] = ethnicity
-
-        # pop_grow = text[index_dict["Population Growth"] + 1 :]
-        # del text[index_dict["Population Growth"] :]
-        # pop_grow = " ".join(pop_grow)
-        # pop_grow = " ".join(pop_grow.split())
-        # main_sheet[country_id]["pop_grow"] = pop_grow
-
-        # population = text[index_dict["Population"] + 1 :]
-        # del text[index_dict["Population"] :]
-        # population = " ".join(population)
-
-        # мы определяем нужный элемент по длине стринга
-        # и форматируем их, чтобы оставить только месяц и год  изменения.
-        # for number in last_update_index:
-        #     if len(text[number]) < 22:
-        #         last_update = text.pop(number)
-        #         last_update = " ".join(last_update.split(" ")[2:4])
-        #         main_sheet[country_id]["last_update"] = last_update
-        #         break
+            if index_dict[item] != []:
+                starting_index = index_dict[item][0]
+                main_sheet[country_id][item] = " ".join(
+                    text[starting_index + len(item.split()) :]
+                )
+                del text[starting_index:]
