@@ -87,8 +87,6 @@ fields = [
 ]
 
 
-test = ""
-index_of_fields = {}
 main_sheet = {}
 ###вот тут начинаем работать с файлом
 ###открываем файл
@@ -104,7 +102,6 @@ for item in sorted(os.listdir("list_text")):
         main_sheet[country_id] = {}
 
         # ищем индекс элемент, в котором хранится данные о дате последнего апдейта пдф.
-        # т.к. ищем мы по неточному значению, то может быть несколько подходящих индексов
         last_update_index = [
             (i, i + 2) for i in range(len(text)) if text[i : i + 2] == ["as", "of"]
         ]
@@ -126,10 +123,33 @@ for item in sorted(os.listdir("list_text")):
 
             main_sheet[country_id][item] = []
 
-            if index_dict[item] != []:
+            if index_dict[item] == [] and item == "Chief of State":
+                main_sheet[country_id][item] = " ".join(text[5:])
+
+            elif index_dict[item] == []:
+                main_sheet[country_id][item] = "NA"
+
+            else:
                 starting_index = index_dict[item][0]
                 main_sheet[country_id][item] = " ".join(
                     text[starting_index + len(item.split()) :]
                 )
                 del text[starting_index:]
+
+
+# with open("csv_all.csv", "w") as csv_f:
+#     csv_writer = csv.writer(csv_f, delimiter="|")
+#     count = 1
+
+#     csv_writer.writerow(
+#         ["country_id"] + [field for field in fields] + ["last update of data"]
+#     )
+#     for country in main_sheet:
+
+#         csv_writer.writerow(
+#             [country] + [v for k, v in list(main_sheet[country].items())[::-1]]
+#         )
+#         print(country, count)
+#         count += 1
+#     print("finished")
 
