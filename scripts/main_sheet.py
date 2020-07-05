@@ -1,20 +1,36 @@
 import os
 import ast
 import re
+import csv
 
 ###раздел для функций
 def get_index(fields, text, country_id):
     """this function builds dict of indexes
     for every country with indexes of elements,
-    that represent the fields in the base"""
+    that represent the rows in the csv"""
 
     index_dict = {}
 
+    # deleting unnecesary headers in text
+    del text[text.index("GOVERNMENT")]
+    del text[text.index("GEOGRAPHY")]
+
+    pep_soc = [
+        (i, i + 3)
+        for i in range(len(text))
+        if text[i : i + 3] == ["PEOPLE", "&", "SOCIETY"]
+    ]
+    del text[pep_soc[0][0] : pep_soc[0][1]]
+
+    if "'Economic', 'Overview'" in str(text):
+        del text[text.index("ECONOMY")]
+
+    # geting index for each field
     for item in fields:
 
         item_list = item.split()
 
-        # исключения для некоторых страниц с ошибкой в заполнении.
+        # exception for some pages that contain errors in naming
         if country_id == "GERMANY" and item == "GDP (Purchasing Power Parity)":
             item_list = "GDP Purchasing Power Parity)".split()
         elif country_id == "MOLDOVA" and item == "US Ambassador":
@@ -42,28 +58,6 @@ def get_index(fields, text, country_id):
         index_dict[item] = index
 
     return index_dict
-
-
-def cleaner(text):
-    """this function cleans text as list from four
-    recurring unnecesary elements"""
-
-    indexer = text.index
-
-    del text[indexer("GOVERNMENT")]
-    del text[indexer("GEOGRAPHY")]
-
-    pep_soc = [
-        (i, i + 3)
-        for i in range(len(text))
-        if text[i : i + 3] == ["PEOPLE", "&", "SOCIETY"]
-    ]
-    del text[pep_soc[0][0] : pep_soc[0][1]]
-
-    if "Economic Overview" in str(text):
-        del text[indexer("ECONOMY")]
-
-    return text
 
 
 fields = [
@@ -123,10 +117,6 @@ for item in sorted(os.listdir("list_text")):
 
         main_sheet[country_id]["last_update"] = last_update
 
-        # далее чистим весь документ от лишних элементов с учетом исключений
-        # для этого функция cleaner
-        text = cleaner(text)
-
         # далее получаем для каждой строки индекс и будем работать от него
         # функция get index для этого
 
@@ -142,3 +132,4 @@ for item in sorted(os.listdir("list_text")):
                     text[starting_index + len(item.split()) :]
                 )
                 del text[starting_index:]
+
