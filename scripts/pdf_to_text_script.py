@@ -2,7 +2,7 @@ from pdfminer import high_level, layout
 import os
 import csv
 
-###раздел для функций
+###here be functions
 def get_index(fields, text, country_id):
     """this function builds dict of indexes
     for every country with indexes of elements,
@@ -122,11 +122,10 @@ def pdf_scraper(path_to_pdf):
         text = text[0].split()
         text = [country] + text
 
-        # list_file.write(str(text))
         country_id = text.pop(0)
         nested_dict[country_id] = {}
 
-        # ищем индекс элемент, в котором хранится данные о дате последнего апдейта пдф.
+        # searching for the date of last update for PDF
         last_update_index = [
             (i, i + 2) for i in range(len(text)) if text[i : i + 2] == ["as", "of"]
         ]
@@ -134,13 +133,14 @@ def pdf_scraper(path_to_pdf):
         last_update = " ".join(
             text[last_update_index[0][1] : last_update_index[0][1] + 2]
         )
-
+        last_update = last_update.strip()
         del text[last_update_index[0][0] : last_update_index[0][0] + 4]
 
         nested_dict[country_id]["last_update"] = last_update
 
-        # далее получаем для каждой строки индекс и будем работать от него
-        # функция get index для этого
+        # We index text with get_index function
+        # then based on index we slice text scraped from PDF
+        # into nested dictionary which we use later for making csv
 
         index_dict = get_index(fields, text, country_id)
 
