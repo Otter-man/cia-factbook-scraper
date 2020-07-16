@@ -1,6 +1,7 @@
 from pdfminer import high_level, layout
 import os
 import csv
+import ast
 
 ###here be functions
 def get_index(fields, text, country_id):
@@ -152,7 +153,7 @@ def pdf_scraper(path_to_pdf):
                 nested_dict[country_id][item] = " ".join(text[5:])
 
             elif index_dict[item] == []:
-                nested_dict[country_id][item] = "NA"
+                nested_dict[country_id][item] = "NULL"
 
             else:
                 starting_index = index_dict[item][0]
@@ -161,9 +162,14 @@ def pdf_scraper(path_to_pdf):
                 )
                 del text[starting_index:]
 
+    nested_dict = str(nested_dict).replace("NA", "NULL")
+    nested_dict = nested_dict.replace("N/A", "NULL")
+    nested_dict = ast.literal_eval(nested_dict)
+
     print("Finished scraping text")
     return nested_dict
 
 
 # country_dict = pdf_scraper("pdf")
-
+# with open("dict.txt", "w") as f:
+#     f.write(str(country_dict))
