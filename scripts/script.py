@@ -136,13 +136,15 @@ def write_to_db(db_file, table, db_obj):
 
 
 links = pdf_link_scraper()  # make dictionary of links for downloading PDF
+print("Donwloading PDFs...")
 download_pdf(links)  # download PDF to folder "pdf"
+print("Starting scraping PDFs for text...")
 obj = pdf_scraper("pdf")  # parse pdf, return dict object with text sorted by fields
 
 db_objects = preparing_db_objects(
     obj
 )  # preparing 7 objects, that we use to create 7 tables
-print("finished preparing objects")
+print("Finished preparing objects")
 
 # name of tables
 tables = [
@@ -163,7 +165,7 @@ if not os.path.exists("db"):
 db_file = "db/summaries.db"
 
 create_db(db_file)  # creates DB with 7 tables
-print("finished creating db")
+print("Finished creating db")
 
 # open connection to DB
 conn = sqlite3.connect(db_file)
@@ -175,5 +177,5 @@ for i in zip(tables, db_objects):
 
 # close connection to db
 conn.close()
-print("finished filling up db")
+print("Finished filling up db")
 
