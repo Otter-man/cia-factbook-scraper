@@ -18,4 +18,4 @@ Install required libraries by runing ```pip install -r requirements.txt```
 
 The run ```script.py``` from `script` folder.
 
-Script will donwload PDF to folder named `pdf` and will create sqlite DB `summaries.db` in the folder `db`/
+Script will donwload PDF to folder named `pdf` and will create sqlite DB `summaries.db` in the folder `db`.
