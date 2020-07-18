@@ -13,6 +13,9 @@ https://www.cia.gov/library/publications/resources/the-world-factbook/docs/one_p
 ## How to use the script
 
 The script is written in **Python 3.8.2**
+
 Install required libraries by runing ```pip install -r requirements.txt```
+
 The run ```script.py``` from `script` folder.
+
 Script will donwload PDF to folder named `pdf` and will create sqlite DB `summaries.db` in the folder `db`/
