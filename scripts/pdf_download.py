@@ -7,11 +7,11 @@ def pdf_link_scraper():
     one-page summaries of the countries
     """
 
-    links = {}  # creating empty dictionary
+    links = {}
     cia_page = "https://www.cia.gov/library/publications/resources/the-world-factbook/docs/one_page_summaries.html"
 
     session = HTMLSession()
-    source = session.get(cia_page).html  # downloading link as html
+    source = session.get(cia_page).html  # downloading page as html
 
     # finding all blocks containing country name and link to onepage summary
     country_data = source.find("div.country-name")
@@ -28,8 +28,8 @@ def download_pdf(links):
     creates folder "pdf" and downloads one-page summaries for each country
     """
 
-    if not os.path.exists("pdf"):  # check if folder "pdf" exists
-        os.mkdir("pdf")  # creating the folder if not
+    if not os.path.exists("pdf"):
+        os.mkdir("pdf")
 
     # we take dictionary resulting from the previous function
     for country, link in links.items():
