@@ -3,7 +3,7 @@
 Script to scrape PDF with one-page summaries of different countries from CIA website.
 
 The same data is availible on CIA webpage in more convinient form, but I wanted to exercise in working with PDF scraping and working with losely formated text.
-Script download PDF to local folder, scrapes text from it and pass it as a formated data into sqlite DB.
+Script downloads PDF to local folder, scrapes text from it and pass it as a formated data into sqlite DB.
 Example of the DB is in the /db folder.
 
 CIA-webpage used as a source for PDF availible here:
