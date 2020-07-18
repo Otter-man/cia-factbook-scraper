@@ -1,6 +1,10 @@
 import sqlite3
 import ast
 import os
+import sys
+
+sys.path.insert(1, "./scripts")
+
 from pdf_download import pdf_link_scraper, download_pdf
 from pdf_to_text_script import pdf_scraper
 from prepare_data import preparing_db_objects
