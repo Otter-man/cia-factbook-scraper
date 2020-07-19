@@ -1,11 +1,14 @@
 import sqlite3
-import ast
+import ast # <- not used
 import os
 
 from scripts.pdf_download import pdf_link_scraper, download_pdf
 from scripts.pdf_to_text_script import pdf_scraper
 from scripts.prepare_data import preparing_db_objects
 
+
+# better to extract everything related to SQL
+# to a separate module and leave this one to run everything together
 
 def create_db(db_file):
     """ create SQLite database and adds 7 prepared tables there"""
@@ -173,6 +176,12 @@ conn = sqlite3.connect(db_file)
 c = conn.cursor()
 
 # pair 7 db objects with 7 table names and pass their content to DB
+# it would be more readable to have a Country class
+# where each field (aka property) would represent one of the 7 tables or
+# just fields from the overview
+# and it would contain other classes as fields for other tables,
+# and then you could insert by-country into the tables easily
+# but this is serious rework of the whole script
 for i in zip(tables, db_objects):
     write_to_db(db_file, i[0], i[1])
 

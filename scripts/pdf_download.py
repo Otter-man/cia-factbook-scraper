@@ -1,11 +1,15 @@
-from requests_html import HTML, HTMLSession
+from requests_html import HTML, HTMLSession # <- HTML is unused
 import os
 
 
-def pdf_link_scraper():
+def pdf_link_scraper(): # functions are better called as verbs, maybe a `get_pdf_links`?
     """this function scrapes CIA web-page with
     one-page summaries of the countries
     """
+
+    # things to add to a function's docstring are params if any (not in this case)
+    # and what the function returns - that was not from the function name or docstring here
+    # words like `this function` can be omitted
 
     links = {}
     cia_page = "https://www.cia.gov/library/publications/resources/the-world-factbook/docs/one_page_summaries.html"
@@ -34,6 +38,8 @@ def download_pdf(links):
     # we take dictionary resulting from the previous function
     for country, link in links.items():
 
+        # isn't it possible to download pdfs as files directly?
+
         # create filename for a pdf using keys from dictionary
         file_name = country + ".pdf"
         file_path = os.path.join("pdf", file_name)  # create path for downloading pdf
@@ -43,3 +49,7 @@ def download_pdf(links):
             pdf_file.write(r.content)
 
     print("Finished downloading all PDFs")
+
+
+# it would be useful to have an if-main script runner here
+# in case you just one to download the pdfs and not execute any more steps

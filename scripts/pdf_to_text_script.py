@@ -1,7 +1,10 @@
 from pdfminer import high_level, layout
 import os
-import csv
+import csv # <- not used
 import ast
+
+
+# this module is especially good for testing
 
 
 def get_index(fields, text_splited, country_id):
@@ -83,6 +86,16 @@ def pdf_scraper(path_to_pdf):
     Return object can be used to make a csv file or fill a table in DB.
     """
 
+    # when saying what a function returns it's better to show what is the
+    # structure of the return value very clearly,
+    # and you may omit how should / can be used
+    # e.g.:
+    # `:return: dict of dicts with countries data with country name
+    # as the key, e.g: <an example of the dict here>`
+
+    # can there be an error with such approach (splitting by words)?
+    # e.g. what if some country's `Area` content has a word "Climate" in it?
+
     # making parameters for PDFminer for this specific PDFs
     la_params = layout.LAParams(
         line_overlap=0.4,
@@ -121,6 +134,8 @@ def pdf_scraper(path_to_pdf):
     ]
 
     nested_dict = {}
+    # better call it something like `countries`
+    # to show what it contains, not how it's structured
 
     for name in os.listdir(path_to_pdf):
         filepath = os.path.join(path_to_pdf, name)
@@ -130,7 +145,12 @@ def pdf_scraper(path_to_pdf):
 
         # here we extract country name from text
         text = text.split("\n", 1)
-        country_id = text.pop(0)
+        country_id = text.pop(0) # this line makes the whole script fail-fast
+        # meaning if there was a single broken (e.g. empty) for some reason
+        # pdf - then an exception will be thrown
+        # and all the rest of the script won't execute
+        # it might be ok if it's expected
+
         if country_id == "SAO TOMEAND PRINCIPE":
             country_id = "SAO TOME AND PRINCIPE"
         # we split text by whitespaces and end-line characters, so text is presented as a list
@@ -168,6 +188,13 @@ def pdf_scraper(path_to_pdf):
             # so with such countries we set value for this fields to NULL
             elif index_dict[fieldname] == []:
                 nested_dict[country_id][fieldname] = "NULL"
+                # it's better to use None not a string "NULL"
+                # and translate None to "NULL" in the place where it will
+                # be needed - e.g. where you store it in a db
+                # because "NULL" is somewhat SQL oriented and this function
+                # shouldn't know or care how the dict of strings will be
+                # treated - will it be SQL or something else
+                # see https://en.wikipedia.org/wiki/Separation_of_concerns for more
 
             # This is main part, that works with most of the text.
             # It starts with the end of text and finds the last field
@@ -191,3 +218,7 @@ def pdf_scraper(path_to_pdf):
 
     print("Finished scraping text")
     return nested_dict
+
+
+# there are many typos
+# pep 8 is not always followed (line lengths, doc string formats, etc)

@@ -1,5 +1,8 @@
-import ast
+import ast # <= not used
 import re
+
+from scripts.Country import Country
+from scripts.Language import Language
 
 
 def percent_taker(category, a_list):
@@ -12,6 +15,10 @@ def percent_taker(category, a_list):
 
     return_list = []
     language_list = []
+
+    country = Country('PAPUA')
+
+    country.languages = [Language('english', True), Language('french', False)]
 
     for element in a_list:
 
@@ -131,7 +138,13 @@ def big_number_converter(big_number):
 
 def preparing_db_objects(obj):
     """
+    the name `obj` doesn't convey any information, maybe `countries`?
+
     this function takes dict object prepared by pdf_scraper()
+
+    ^ it shouldn't matter for a function by which other function
+    the passed parameter is created, just the structure / type of the object
+
     and breaks it into 7 different dictionaries, each with data
     for specific table in the sqlite DB.
     Tables will be 'Country overview' with overview of the country,
