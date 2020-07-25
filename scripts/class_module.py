@@ -1,10 +1,8 @@
-'this module contains very class used in the project'
+"""This module contains all classes used in the project."""
 
 
 class Country:
-    '''Class for storing country-specific data. It takes a single string,
-    int or float for every parameter except for natural resources, which
-    takes a list where every element is a string'''
+    '''Class for storing data for each country in readable form.'''
 
     def __init__(self, name, natural_resources, chief_of_state,
                  head_of_government, government_type, capital,
