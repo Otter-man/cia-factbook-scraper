@@ -1,0 +1,6 @@
+.vscode
+venv
+pdf
+data
+test.*
+__pycache__
