@@ -1,4 +1,3 @@
-import ast
 import re
 
 
@@ -51,7 +50,7 @@ def percent_taker(category, a_list):
                     and "/" not in element_listed[index - 1]
                 ):
 
-                    percentage = "".join(element_listed[index - 1 : index + 1])
+                    percentage = "".join(element_listed[index - 1: index + 1])
                     parted = " ".join(element_listed[: index - 1])
                 else:
                     percentage = element_listed[index]
@@ -85,7 +84,8 @@ def percent_taker(category, a_list):
     # but this doesn't check the "official" part, so duplicate with
     # official status can be accidently removed
     if category == "Language":
-        return_list = list(dict((x[0] + str(x[1]), x) for x in return_list).values())
+        return_list = list(dict((x[0] + str(x[1]), x)
+                                for x in return_list).values())
 
         # To check that the language official status isn't lost, we
         # compare elements from the second list, wich we didn't modify.
@@ -181,7 +181,7 @@ def preparing_db_objects(obj):
                 db_obj_overview[country]["literacy_year"] = lit_year
 
             elif field == "Urbanization":
-                ##in urbanization field we extract three columns - "rate of urbanization"
+                # in urbanization field we extract three columns - "rate of urbanization"
                 # and "urban population %" and "urban population year of update" using regexp
                 pattern = re.compile(
                     r"\s?([0-9\. ]{1,5}\%).*\((20..)\)?.*urbanization: ([\-0-9\. ]{1,5}\%)"
@@ -291,7 +291,8 @@ def preparing_db_objects(obj):
                     else:
                         # this block handles countries wich don't have import|export partners written
                         try:
-                            partners = field_data.split("partners")[1].replace(": ", "")
+                            partners = field_data.split(
+                                "partners")[1].replace(": ", "")
                         except IndexError as e:
                             partners = "NULL"
 
@@ -364,14 +365,16 @@ def preparing_db_objects(obj):
 
                 elif country == "GREENLAND":
                     total = field_data.lower().split("total: ")
-                    total = total[1][: total[1].index(" sq km")].replace(",", "")
+                    total = total[1][: total[1].index(
+                        " sq km")].replace(",", "")
 
                     land = "NULL"
                     water = "NULL"
 
                 else:
                     total = field_data.lower().split("total: ")
-                    total = total[1][: total[1].index(" sq km")].replace(",", "")
+                    total = total[1][: total[1].index(
+                        " sq km")].replace(",", "")
 
                     land = field_data.lower().split("land")
                     land = land[1][: land[1].index(" sq km")].replace(",", "")
@@ -384,7 +387,8 @@ def preparing_db_objects(obj):
 
                     try:
                         water = field_data.lower().split("water: ")
-                        water = water[1][: water[1].index(" sq km")].replace(",", "")
+                        water = water[1][: water[1].index(
+                            " sq km")].replace(",", "")
                     except:
                         water = "0"
 
@@ -519,7 +523,8 @@ def preparing_db_objects(obj):
                 if country == "SPAIN":
                     language_list[4:] = [" ".join(language_list[4:])]
                 elif country == "KAZAKHSTAN":
-                    language_list = language_list[0].split(" and ") + language_list[1:]
+                    language_list = language_list[0].split(
+                        " and ") + language_list[1:]
                 elif country == "MOZAMBIQUE":
                     language_list[3] = language_list[3] + "%"
 
@@ -571,7 +576,8 @@ def preparing_db_objects(obj):
                     ethnicity_list[1] = ethnicity_list[1] + "%"
                     del ethnicity_list[3]
                 elif country == "MALDIVES":
-                    ethnicity_list = [", ".join(ethnicity_list).split(" resulting")[0]]
+                    ethnicity_list = [
+                        ", ".join(ethnicity_list).split(" resulting")[0]]
                 elif country == "DEMOCRATIC REPUBLIC OF THE CONGO":
                     ethnicity_list = [ethnicity_list[0]]
 
@@ -592,4 +598,3 @@ def preparing_db_objects(obj):
         db_obj_exp_part,
         db_obj_imp_part,
     ]
-
