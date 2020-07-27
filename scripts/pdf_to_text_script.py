@@ -2,6 +2,7 @@
 import os
 import ast
 import re
+import class_module as cm
 from pdfminer import high_level, layout
 
 
@@ -124,7 +125,7 @@ def convert_big_str_numbers(big_number):
 
 
 def percent_taker(category, a_list):
-    """this function takes data from preparing_db_objects
+    """this function takes data from FormatPDFData
     for language, ethnicity, religion, import and export partners
     and returns nested lists where every list contains item of category
     (religion, ethnos, language) and % of population that uses it for
@@ -229,7 +230,7 @@ def percent_taker(category, a_list):
     return return_list
 
 
-def preparing_db_objects(obj):
+def FormatFieldData(field_name):
     """
     this function takes dict object prepared by pdf_scraper()
     and breaks it into 7 different dictionaries, each with data
@@ -241,495 +242,468 @@ def preparing_db_objects(obj):
     other dicts
     """
 
-    db_obj_overview = {}
-    db_obj_nat_res = {}
-    db_obj_religion = {}
-    db_obj_language = {}
-    db_obj_ethnicity = {}
-    db_obj_exp_part = {}
-    db_obj_imp_part = {}
+    def literacy_field(field_data):
+        # in literacy field we extract two columns - "literacy_%_of_population"
+        # and "literacy year updated" using regexp
+        if field_data == None:
+            lit_year, lit_percent = field_data, field_data
+        else:
+            pattern = re.compile(r"([0-9\.]{0,4}%).*\((20..)")
+            match = re.search(pattern, field_data)
+            lit_year = match[2]
+            lit_percent = match[1]
 
-    for country in sorted(list(obj)):
+        try:
+            lit_percent = float(lit_percent.replace("%", ""))
+            lit_year = int(lit_year)
 
-        db_obj_overview[country] = {}
-        db_obj_nat_res[country] = []
-        db_obj_overview[country]["country_id"] = country
+        except (ValueError, AttributeError):
+            pass
 
-        for field in list(obj[country])[::-1]:
+        return [lit_year, lit_percent]
 
-            field_data = obj[country][field]
+    def urbanization_field(field_data):
+        # in urbanization field we extract three columns - "rate of urbanization"
+        # and "urban population %" and "urban population year of update" using regexp
+        pattern = re.compile(
+            r"\s?([0-9\. ]{1,5}\%).*\((20..)\)?.*urbanization: ([\-0-9\. ]{1,5}\%)"
+        )
+        match = re.search(pattern, str(field_data))
 
-            if field == "Literacy":
-                # in literacy field we extract two columns - "literacy_%_of_population"
-                # and "literacy year updated" using regexp
-                if field_data == None:
-                    lit_year, lit_percent = field_data, field_data
+        if field_data is None:
+            rate_urb, urb_pop_year, urb_pop = field_data, field_data, field_data
+        else:
+            try:
+                if match[3][0] != ".":
+                    rate_urb = match[3].replace(" ", "")
                 else:
-                    pattern = re.compile(r"([0-9\.]{0,4}%).*\((20..)")
-                    match = re.search(pattern, field_data)
-                    lit_year = match[2]
-                    lit_percent = match[1]
-
-                try:
-                    lit_percent = float(lit_percent.replace("%", ""))
-                    lit_year = int(lit_year)
-
-                except (ValueError, AttributeError):
-                    pass
-
-                db_obj_overview[country]["literacy_%_of_population"] = lit_percent
-                db_obj_overview[country]["literacy_year"] = lit_year
-
-            elif field == "Urbanization":
-                # in urbanization field we extract three columns - "rate of urbanization"
-                # and "urban population %" and "urban population year of update" using regexp
-                pattern = re.compile(
-                    r"\s?([0-9\. ]{1,5}\%).*\((20..)\)?.*urbanization: ([\-0-9\. ]{1,5}\%)"
-                )
-                match = re.search(pattern, str(field_data))
-
-                if field_data == None:
-                    rate_urb, urb_pop_year, urb_pop = field_data, field_data, field_data
-                else:
-                    if match[3][0] != ".":
-                        rate_urb = match[3].replace(" ", "")
-                    else:
-                        rate_urb = "0" + match[3].replace(" ", "")
-                    urb_pop = match[1].replace(" ", "")
-                    urb_pop_year = match[2]
-                try:
-                    rate_urb = float(rate_urb[:-1])
-                    urb_pop = float(urb_pop[:-1])
-                    urb_pop_year = int(urb_pop_year)
-                except (ValueError, TypeError):
-                    pass
-
-                db_obj_overview[country]["rate_of_urbanization"] = rate_urb
-                db_obj_overview[country]["urban_population"] = urb_pop
-                db_obj_overview[country]["urban_population_year"] = urb_pop_year
-
-            elif field == "Population Growth":
-                # here we extract two columns pop. growth % and year of update
-                pattern = re.compile(r"([\-\.0-9 ]*\%).*(20\d\d)")
-                match = re.search(pattern, str(field_data))
-
-                if field_data == None:
-                    pop_grow_year, pop_grow = field_data, field_data
-                else:
-                    pop_grow_year = match[2]
-                    if match[1][0] == ".":
-                        pop_grow = "0" + match[1].replace(" ", "")
-                    elif match[1][:2] == "-.":
-                        pop_grow = "-0" + match[1].split("-.0", 1)[1]
-                    else:
-                        pop_grow = match[1].replace(" ", "")
-                try:
-                    pop_grow = float(pop_grow[:-1])
-                    pop_grow_year = int(pop_grow_year)
-                except (ValueError, TypeError):
-                    pass
-
-                db_obj_overview[country]["population_growth"] = pop_grow
-                db_obj_overview[country]["population_growth_year"] = pop_grow_year
-
-            elif field == "Population":
-                # population field gives us population number and year of update
-
-                # here we handle the only country in list wich is uninhabited
-                if country == "FRENCH SOUTHERN AND ANTARCTIC LANDS":
-                    pop_year = None
-                    population = "0"
-
-                else:
-                    # we convert worded numbeer (like "1 billion") to an integer with
-                    # using function big_number_converter()
-                    if "million" in str(field_data) or "billion" in str(field_data):
-
-                        pattern = re.compile(
-                            r"([0-9\.,]*)\s(million|billion).*\((.*)est"
-                        )
-                        match = re.search(pattern, field_data)
-
-                        population = " ".join([match[1], match[2]])
-
-                        population = convert_big_str_numbers(population)
-
-                        pop_year = match[3]
-
-                    else:
-                        pattern = re.compile(r"([0-9\,]*) \((.*) est")
-                        match = re.search(pattern, field_data)
-
-                        population = match[1].replace(",", "")
-
-                        pop_year = match[2]
-                        try:
-                            pop_year = pop_year.strip()
-                        except AttributeError:
-                            pass
-
-                db_obj_overview[country]["population"] = int(population)
-                db_obj_overview[country]["population_year"] = pop_year
-
-            elif field == "Imports" or field == "Exports":
-                # this fields gives us two columns for each - import|export size and year of update
-                # with function "percent taker" we also create separate dictionaries for
-                # import|export partners
-                if field_data == None:
-                    activity_size, partners, act_year = (
-                        field_data,
-                        field_data,
-                        field_data,
-                    )
-
-                else:
-                    pattern = re.compile(
-                        r"(\$[0-9\.]*)\s(billion|million|trillion)\s.(\d\d\d\d)"
-                    )
-                    match = re.search(pattern, field_data)
-
-                    # thic block handles exception in formating in ETHIOPIA
-                    if field == "Imports" and country == "ETHIOPIA":
-                        partners = field_data.split(") ")[1]
-
-                    else:
-                        # this block handles countries which don't have import|export partners written
-                        try:
-                            partners = field_data.split(
-                                "partners")[1].replace(": ", "")
-                        except IndexError as e:
-                            partners = None
-
-                    try:
-                        act_year = match[3]
-                        activity_size = f"{match[1]} {match[2]}"
-                    except TypeError as e:  # exception handles some country with error in formating
-                        act_year = field_data.split("(")[1][:5]
-                        activity_size = "".join(field_data.split()[:2])
-
-                if act_year != None:
-                    act_year = int(act_year.strip())
-
-                if activity_size != None:
-                    activity_size = convert_big_str_numbers(activity_size)
-
-                db_obj_overview[country][field] = activity_size
-                if field == "Imports":
-                    db_obj_overview[country]["imports_year"] = act_year
-                elif field == "Exports":
-                    db_obj_overview[country]["exports_year"] = act_year
-
-                # here we handle import partners for the second dictionary
-                if partners != None and partners != 'None':
-                    pattern = re.compile(r"\s\(.*?\)")
-                    match = re.search(pattern, partners)
-
-                    # we clean unnecessary info with year, wich
-                    # duplicates imports|export year of update
-                    # it is presented in every country except for imports sudan
-                    if field == "Imports" and country == "SUDAN":
-                        pass
-                    else:
-                        partners = partners.replace(match[0], "")
-
-                    # handles the mistake in text for France import partners
-                    if field == "Imports" and country == "FRANCE":
-                        partners = partners.replace("Belgium", "Belgium ")
-
-                    # returning , that were skipped in the text
-                    partners = partners.replace("% ", "%,")
-
-                    partners = partners.split(",")
-
-                    # fixing forgotten % symbols
-                    for item in partners:
-                        ind = partners.index(item)
-                        item = item.strip()
-                        if item != "" and item != None and item[-1] != "%":
-                            item = item + "%"
-                        partners[ind] = item
-
-                    # we create content for import|exports partners dictionary
-                    # with percent_taker function
-                    partners_listed = percent_taker(field, partners)
-                else:
-                    partners_listed = [[None, None]]
-
-                if field == "Imports":
-                    db_obj_imp_part[country] = partners_listed
-                    for partner in db_obj_imp_part[country]:
-                        partner.append(act_year)
-                elif field == "Exports":
-                    db_obj_exp_part[country] = partners_listed
-                    for partner in db_obj_exp_part[country]:
-                        partner.append(act_year)
-
-            elif field == "Area":
-                # this block makes 3 columns - area land, water and total area.
-                if country == "FRENCH SOUTHERN AND ANTARCTIC LANDS":
-                    total, land, water = None, None, None
-
-                elif country == "GREENLAND":
-                    total = field_data.lower().split("total: ")
-                    total = total[1][: total[1].index(
-                        " sq km")].replace(",", "")
-
-                    land = None
-                    water = None
-
-                else:
-                    total = field_data.lower().split("total: ")
-                    total = total[1][: total[1].index(
-                        " sq km")].replace(",", "")
-
-                    land = field_data.lower().split("land")
-                    land = land[1][: land[1].index(" sq km")].replace(",", "")
-                    land = land.replace(":", "").strip()
-                    land = land.replace("-", "")
-
-                    if country == "SAUDI ARABIA":
-                        total = convert_big_str_numbers(total)
-                        land = convert_big_str_numbers(land)
-
-                    try:
-                        water = field_data.lower().split("water: ")
-                        water = water[1][: water[1].index(
-                            " sq km")].replace(",", "")
-                    except:
-                        water = "0"
-
-                try:
-                    total = float(total)
-                    land = float(land)
-                    water = float(water)
-                except (ValueError, TypeError):
-                    pass
-
-                db_obj_overview[country]["area_total_(sq_km)"] = total
-                db_obj_overview[country]["area_land_(sq_km)"] = land
-                db_obj_overview[country]["area_water_(sq_km)"] = water
-
-            elif field == "GDP (Purchasing Power Parity)":
-                # this field we make columns GDP size and year of update
-                pattern = re.compile(
-                    r"(\$[0-9\.]+)\s(bi+llion|million|trillion)\s\((20[0-9]{2})"
-                )
-                match = re.search(pattern, str(field_data))
-
-                try:
-                    gdp = f"{match[1]} {match[2].replace('ii','i')}"
-                    gdp_year = match[3]
-                except:
-                    gdp, gdp_year = None, None
-
-                if gdp_year != None:
-                    gdp_year = int(gdp_year)
-
-                if gdp != None:
-                    gdp = convert_big_str_numbers(gdp)
-
-                db_obj_overview[country]["gdp"] = gdp
-                db_obj_overview[country]["gdp_year"] = gdp_year
-
-            elif field == "GDP per capita (Purchasing Power Parity)":
-                # this blocks make two columns - gdp per capita and year of update
-                try:
-                    per_capita = field_data.split(" (")[0]
-                    per_capita_year = field_data.split(" (")[1][:5]
-                    per_capita_year = per_capita_year.strip().replace(")", "")
-                except:
-                    per_capita, per_capita_year = None, None
-
-                if per_capita != None and per_capita_year != None:
-                    per_capita = int(per_capita[1:].replace(",", ""))
-                    per_capita_year = int(per_capita_year)
-
-                db_obj_overview[country]["per_capita_$"] = per_capita
-                db_obj_overview[country]["per_capita_year"] = per_capita_year
-
-            elif field == "Natural Resources":
-                # this block we use to create table "natural resources"
-
-                try:
-                    resource_list = field_data.split("note")[0]
-                    resource_list = [
-                        resource.strip() for resource in resource_list.split(",")
-                    ]
-                except AttributeError:
-                    resource_list = [None]
-
-                for resource in resource_list:
-                    temp_resources = []
-
-                    if resource[:4] == "and ":
-                        resource = resource[4:]
-
-                    if ";" in resource:
-                        temp_resources.extend(resource.split(";"))
-                    elif "(" in resource:
-                        temp_resources.append(resource[: resource.find(" (")])
-                    else:
-                        temp_resources.append(resource)
-
-                    for item in temp_resources:
-                        if item != "":
-                            db_obj_nat_res[country].append(item.strip())
-
-            elif field == "Religion":
-                # this blocks is used to prepare 'Religion' table
-                # with the help of percent_taker function
-                try:
-                    religion_list = field_data.split("note")[0]
-                except AttributeError:
-                    religion_list = field_data
-
-                pattern = re.compile(r"\d\d\d\d")
-                match = re.search(pattern, str(religion_list))
-
-                try:
-                    year = match[0]
-                except:
-                    year = None
-
-                # handles specific formating for ukraine
-                if country == "UKRAINE":
-                    religion_list = re.sub("\(.*?\)\)", "", religion_list)
-                # cleans code of things in parenthesis
-                if religion_list != None:
-                    religion_list = re.sub("\(.*?\)1?", "", religion_list)
-
-                    religion_list = [
-                        relig.strip() for relig in religion_list.split(",")
-                    ]
-
-                db_obj_religion[country] = percent_taker(field, religion_list)
-
-                for religion in db_obj_religion[country]:
-                    try:
-                        religion.append(year.strip())
-                    except AttributeError:
-                        religion.append(year)
-
-            elif field == "Language":
-                # this block used for "Language" table with percent_taker
-                language_list = field_data
-
-                pattern = re.compile(r"\s\((\d\d\d\d) (est.|census)\)")
-                matches = re.search(pattern, str(language_list))
-
-                try:
-                    year = matches[1]
-                    language_list = re.sub(pattern, "", language_list)
-                except:
-                    year = None
-
-                try:
-                    language_list = language_list.split(" note")[0]
-                    language_list = language_list.replace(";", ",")
-                except AttributeError:
-                    pass
-
-                pattern = re.compile(r"\(.*?\)")
-                matches = re.finditer(pattern, str(language_list))
-
-                for inst in matches:
-                    language_list = language_list.replace(
-                        inst.group(0), inst.group(0).replace(",", ";")
-                    )
-                try:
-                    language_list = language_list.replace("%1", "%")
-                    language_list = [i.strip()
-                                     for i in language_list.split(",")]
-
-                except AttributeError:
-                    language_list = [None]
-
-                # handles exception with formating on some countries
-                if country == "SPAIN":
-                    language_list[4:] = [" ".join(language_list[4:])]
-                elif country == "KAZAKHSTAN":
-                    language_list = language_list[0].split(
-                        " and ") + language_list[1:]
-                elif country == "MOZAMBIQUE":
-                    language_list[3] = language_list[3] + "%"
-
-                db_obj_language[country] = percent_taker(field, language_list)
-                for language in db_obj_language[country]:
-                    try:
-                        language.append(year.strip())
-                    except:
-                        language.append(year)
-            elif field == "Ethnicity":
-                # this block is for "Ethnicity" table
-                ethnicity_list = field_data.replace(" %", "%")
-
-                pattern = re.compile(r"\s\((\d\d\d\d).*?\)1?")
-                match = re.search(pattern, ethnicity_list)
-
-                try:
-                    year = match[1]
-                    ethnicity_list = ethnicity_list.replace(match[0], "")
-                except:
-                    year = None
-
-                pattern = re.compile(r"\s?\(.*?\)\s?")
-                matches = re.finditer(pattern, ethnicity_list)
-
-                for inst in matches:
-                    ethnicity_list = ethnicity_list.replace(inst.group(0), " ")
-
-                # eception in formating for some countries
-                if country == "DENMARK":
-                    ethnicity_list = ethnicity_list.replace("and Faroese)", "")
-                elif country == "BURUNDI":
-                    ethnicity_list = ethnicity_list.replace(",000", "000")
-                elif country == "GHANA":
-                    ethnicity_list = ethnicity_list.replace("47.5", "47.5%")
-
-                ethnicity_list = ethnicity_list.split("note")[0]
-                ethnicity_list = ethnicity_list.replace(";", ",")
-
-                ethnicity_list = [
-                    ethnicity.strip() for ethnicity in ethnicity_list.split(",")
-                ]
-
-                # more exceptions
-                if country == "PORTUGAL":
-                    ethnicity_list[1:3] = [",".join(ethnicity_list[1:3])]
-                    ethnicity_list = ethnicity_list[:2]
-
-                elif country == "REPUBLIC OF THE CONGO":
-                    ethnicity_list[1:1] = ethnicity_list[1].split("% ")[:2]
-                    ethnicity_list[1] = ethnicity_list[1] + "%"
-                    del ethnicity_list[3]
-                elif country == "MALDIVES":
-                    ethnicity_list = [
-                        ", ".join(ethnicity_list).split(" resulting")[0]]
-                elif country == "DEMOCRATIC REPUBLIC OF THE CONGO":
-                    ethnicity_list = [ethnicity_list[0]]
-
-                db_obj_ethnicity[country] = percent_taker(field, ethnicity_list)
-                for ethnos in db_obj_ethnicity[country]:
-                    try:
-                        ethnos.append(year.strip())
-                    except AttributeError:
-                        ethnos.append(year)
+                    rate_urb = "0" + match[3].replace(" ", "")
+            except TypeError as e:
+                print(e)
+                print(field_name)
+                print(field_data)
+            urb_pop = match[1].replace(" ", "")
+            urb_pop_year = match[2]
+        try:
+            rate_urb = float(rate_urb[:-1])
+            urb_pop = float(urb_pop[:-1])
+            urb_pop_year = int(urb_pop_year)
+        except (ValueError, TypeError):
+            pass
+
+        return [rate_urb, urb_pop_year, urb_pop]
+
+    def population_growth_field(field_data):
+        # here we extract two columns pop. growth % and year of update
+        pattern = re.compile(r"([\-\.0-9 ]*\%).*(20\d\d)")
+        match = re.search(pattern, str(field_data))
+
+        if field_data is None:
+            pop_grow_year, pop_grow = field_data, field_data
+        else:
+            pop_grow_year = match[2]
+            if match[1][0] == ".":
+                pop_grow = "0" + match[1].replace(" ", "")
+            elif match[1][:2] == "-.":
+                pop_grow = "-0" + match[1].split("-.0", 1)[1]
             else:
-                # pass the rest of fields as is to main table "countrie overwiew"
+                pop_grow = match[1].replace(" ", "")
+        try:
+            pop_grow = float(pop_grow[:-1])
+            pop_grow_year = int(pop_grow_year)
+        except (ValueError, TypeError):
+            pass
+        return [pop_grow_year, pop_grow]
+
+    def population_field(country, field_data):
+        # population field gives us population number and year of update
+
+        # here we handle the only country in list wich is uninhabited
+        if country == "FRENCH SOUTHERN AND ANTARCTIC LANDS":
+            pop_year = None
+            population = "0"
+
+        else:
+            # we convert worded numbeer (like "1 billion") to an integer with
+            # using function big_number_converter()
+            if "million" in str(field_data) or "billion" in str(field_data):
+
+                pattern = re.compile(
+                    r"([0-9\.,]*)\s(million|billion).*\((.*)est"
+                )
+                match = re.search(pattern, field_data)
+
+                population = " ".join([match[1], match[2]])
+
+                population = convert_big_str_numbers(population)
+
+                pop_year = match[3]
+
+            else:
+                pattern = re.compile(r"([0-9\,]*) \((.*) est")
+                match = re.search(pattern, field_data)
+
+                population = match[1].replace(",", "")
+
+                pop_year = match[2]
                 try:
-                    db_obj_overview[country][field] = field_data.replace(
-                        "'", "’")
+                    pop_year = pop_year.strip()
                 except AttributeError:
-                    db_obj_overview[country][field] = field_data
-    return [
-        db_obj_overview,
-        db_obj_nat_res,
-        db_obj_religion,
-        db_obj_language,
-        db_obj_ethnicity,
-        db_obj_exp_part,
-        db_obj_imp_part,
-    ]
+                    pass
+        return [pop_year, int(population)]
+
+    def imports_exports_field(country, field_data, field_name):
+        # this fields gives us two columns for each - import|export size and year of update
+        # with function "percent taker" we also create separate dictionaries for
+        # import|export partners
+        if field_data == None:
+            activity_size, partners, act_year = (
+                field_data,
+                field_data,
+                field_data,
+            )
+
+        else:
+            pattern = re.compile(
+                r"(\$[0-9\.]*)\s(billion|million|trillion)\s.(\d\d\d\d)"
+            )
+            match = re.search(pattern, field_data)
+
+            # this block handles exception in formating in ETHIOPIA
+            if field_name == "Imports" and country == "ETHIOPIA":
+                partners = field_data.split(") ")[1]
+
+            else:
+                # this block handles countries which don't have import|export partners written
+                try:
+                    partners = field_data.split(
+                        "partners")[1].replace(": ", "")
+                except IndexError:
+                    partners = None
+
+            try:
+                act_year = match[3]
+                activity_size = f"{match[1]} {match[2]}"
+            # exception handles some country with error in formating
+            except TypeError:
+                act_year = field_data.split("(")[1][:5]
+                activity_size = "".join(field_data.split()[:2])
+
+        if act_year != None:
+            act_year = int(act_year.strip())
+
+        if activity_size != None:
+            activity_size = convert_big_str_numbers(activity_size)
+        # here we handle import|export partners for the second dictionary
+        if partners is not None and partners != 'N/A':
+            pattern = re.compile(r"\s\(.*?\)")
+            match = re.search(pattern, partners)
+
+            # we clean unnecessary info with year, wich
+            # duplicates imports|export year of update
+            # it is presented in every country except for imports sudan
+            if field_name == "Imports" and country == "SUDAN":
+                pass
+            else:
+                partners = partners.replace(match[0], "")
+
+            # handles the mistake in text for France import partners
+            if field_name == "Imports" and country == "FRANCE":
+                partners = partners.replace("Belgium", "Belgium ")
+
+            # returning , that were skipped in the text
+            partners = partners.replace("% ", "%,")
+
+            partners = partners.split(",")
+
+            # fixing forgotten % symbols
+            for item in partners:
+                ind = partners.index(item)
+                item = item.strip()
+                if item != "" and item != None and item[-1] != "%":
+                    item = item + "%"
+                partners[ind] = item
+
+            # we create content for import|exports partners dictionary
+            # with percent_taker function
+            partners_listed = percent_taker(field_name, partners)
+        else:
+            partners_listed = [[None, None]]
+
+        for partner in partners_listed:
+            partner[:0] = [country]
+            partner.append(act_year)
+
+        return [act_year, activity_size], partners_listed
+
+    def area_field(country, field_data):
+        # this block makes 3 columns - area land, water and total area.
+        if country == "FRENCH SOUTHERN AND ANTARCTIC LANDS":
+            total, land, water = None, None, None
+
+        elif country == "GREENLAND":
+            total = field_data.lower().split("total: ")
+            total = total[1][: total[1].index(
+                " sq km")].replace(",", "")
+
+            land = None
+            water = None
+
+        else:
+            total = field_data.lower().split("total: ")
+            total = total[1][: total[1].index(
+                " sq km")].replace(",", "")
+
+            land = field_data.lower().split("land")
+            land = land[1][: land[1].index(" sq km")].replace(",", "")
+            land = land.replace(":", "").strip()
+            land = land.replace("-", "")
+
+            if country == "SAUDI ARABIA":
+                total = convert_big_str_numbers(total)
+                land = convert_big_str_numbers(land)
+
+            try:
+                water = field_data.lower().split("water: ")
+                water = water[1][: water[1].index(
+                    " sq km")].replace(",", "")
+            except:
+                water = "0"
+
+        try:
+            total = float(total)
+            land = float(land)
+            water = float(water)
+        except (ValueError, TypeError):
+            pass
+
+        return [water, land, total]
+
+    def gdp_ppp_field(field_data):
+        # this field we make columns GDP size and year of update
+        pattern = re.compile(
+            r"(\$[0-9\.]+)\s(bi+llion|million|trillion)\s\((20[0-9]{2})"
+        )
+        match = re.search(pattern, str(field_data))
+
+        try:
+            gdp = f"{match[1]} {match[2].replace('ii','i')}"
+            gdp_year = match[3]
+        except:
+            gdp, gdp_year = None, None
+
+        if gdp_year != None:
+            gdp_year = int(gdp_year)
+
+        if gdp != None:
+            gdp = convert_big_str_numbers(gdp)
+
+        return [gdp_year, gdp]
+
+    def per_capita_field(field_data):
+        # this blocks make two columns - gdp per capita and year of update
+        try:
+            per_capita = field_data.split(" (")[0]
+            per_capita_year = field_data.split(" (")[1][:5]
+            per_capita_year = per_capita_year.strip().replace(")", "")
+        except:
+            per_capita, per_capita_year = None, None
+
+        if per_capita != None and per_capita_year != None:
+            per_capita = int(per_capita[1:].replace(",", ""))
+            per_capita_year = int(per_capita_year)
+
+        return [per_capita_year, per_capita]
+
+    def natural_resources_field(country, field_data):
+        # this block we use to create table "natural resources"
+
+        resource_list = field_data.split("note")[0]
+        resource_list = [resource.strip()
+                         for resource in resource_list.split(",")]
+
+        for resource in resource_list:
+            temp_resources = []
+
+            if resource[:4] == "and ":
+                resource = resource[4:]
+
+            if ";" in resource:
+                temp_resources.extend(resource.split(";"))
+            elif "(" in resource:
+                temp_resources.append(resource[: resource.find(" (")])
+            else:
+                temp_resources.append(resource)
+
+        resource_list = [[country, item.strip()]
+                         for item in temp_resources if item != '']
+
+        return resource_list
+
+    def religion_field(country, field_data, field_name):
+        # this blocks is used to prepare 'Religion' table
+        # with the help of percent_taker function
+        try:
+            religion_list = field_data.split("note")[0]
+        except AttributeError:
+            religion_list = field_data
+
+        pattern = re.compile(r"\d\d\d\d")
+        match = re.search(pattern, str(religion_list))
+
+        try:
+            year = match[0].strip()
+        except:
+            year = None
+
+        # handles specific formating for ukraine
+        if country == "UKRAINE":
+            religion_list = re.sub(r"\(.*?\)\)", "", religion_list)
+        # cleans code of things in parenthesis
+        if religion_list != None:
+            religion_list = re.sub(r"\(.*?\)1?", "", religion_list)
+
+            religion_list = [
+                relig.strip() for relig in religion_list.split(",")
+            ]
+
+        religion_list = percent_taker(field_name, religion_list)
+
+        for religion in religion_list:
+            religion[:0] = [country]
+            religion.append(year)
+
+        return religion_list
+
+    def language_field(country, field_data, field_name):
+        # this block used for "Language" table with percent_taker
+        language_list = field_data
+
+        pattern = re.compile(r"\s\((\d\d\d\d) (est.|census)\)")
+        matches = re.search(pattern, str(language_list))
+
+        try:
+            year = matches[1].strip()
+            language_list = re.sub(pattern, "", language_list)
+        except:
+            year = None
+
+        try:
+            language_list = language_list.split(" note")[0]
+            language_list = language_list.replace(";", ",")
+        except AttributeError:
+            pass
+
+        pattern = re.compile(r"\(.*?\)")
+        matches = re.finditer(pattern, str(language_list))
+
+        for inst in matches:
+            language_list = language_list.replace(
+                inst.group(0), inst.group(0).replace(",", ";")
+            )
+        try:
+            language_list = language_list.replace("%1", "%")
+            language_list = [i.strip()
+                             for i in language_list.split(",")]
+
+        except AttributeError:
+            language_list = [None]
+
+        # handles exception with formating on some countries
+        if country == "SPAIN":
+            language_list[4:] = [" ".join(language_list[4:])]
+        elif country == "KAZAKHSTAN":
+            language_list = language_list[0].split(
+                " and ") + language_list[1:]
+        elif country == "MOZAMBIQUE":
+            language_list[3] = language_list[3] + "%"
+
+        language_list = percent_taker(field_name, language_list)
+        for language in language_list:
+            language[:0] = [country]
+            language.append(year)
+
+        return language_list
+
+    def ethnicity_field(country, field_data, field_name):
+        # this block is for "Ethnicity" table
+        ethnicity_list = field_data.replace(" %", "%")
+
+        pattern = re.compile(r"\s\((\d\d\d\d).*?\)1?")
+        match = re.search(pattern, ethnicity_list)
+
+        try:
+            year = match[1].strip()
+            ethnicity_list = ethnicity_list.replace(match[0], "")
+        except:
+            year = None
+
+        pattern = re.compile(r"\s?\(.*?\)\s?")
+        matches = re.finditer(pattern, ethnicity_list)
+
+        for inst in matches:
+            ethnicity_list = ethnicity_list.replace(inst.group(0), " ")
+
+        # eception in formating for some countries
+        if country == "DENMARK":
+            ethnicity_list = ethnicity_list.replace("and Faroese)", "")
+        elif country == "BURUNDI":
+            ethnicity_list = ethnicity_list.replace(",000", "000")
+        elif country == "GHANA":
+            ethnicity_list = ethnicity_list.replace("47.5", "47.5%")
+
+        ethnicity_list = ethnicity_list.split("note")[0]
+        ethnicity_list = ethnicity_list.replace(";", ",")
+
+        ethnicity_list = [
+            ethnicity.strip() for ethnicity in ethnicity_list.split(",")
+        ]
+
+        # more exceptions
+        if country == "PORTUGAL":
+            ethnicity_list[1:3] = [",".join(ethnicity_list[1:3])]
+            ethnicity_list = ethnicity_list[:2]
+
+        elif country == "REPUBLIC OF THE CONGO":
+            ethnicity_list[1:1] = ethnicity_list[1].split("% ")[:2]
+            ethnicity_list[1] = ethnicity_list[1] + "%"
+            del ethnicity_list[3]
+        elif country == "MALDIVES":
+            ethnicity_list = [
+                ", ".join(ethnicity_list).split(" resulting")[0]]
+        elif country == "DEMOCRATIC REPUBLIC OF THE CONGO":
+            ethnicity_list = [ethnicity_list[0]]
+
+        ethnicity_list = percent_taker(field_name, ethnicity_list)
+        for ethnos in ethnicity_list:
+            ethnos[:0] = [country]
+            ethnos.append(year)
+        return ethnicity_list
+
+    def other_fields(field_data):
+        # pass the rest of fields as is to main table "country overview"
+        try:
+            field_data = field_data.replace(
+                "'", "’")
+        except AttributeError:
+            pass
+        return [field_data]
+
+    func_dict = {"Literacy": literacy_field,
+                 "Urbanization": urbanization_field,
+                 "Population Growth": population_growth_field,
+                 "Population": population_field,
+                 "Imports": imports_exports_field,
+                 "Exports": imports_exports_field,
+                 "Area": area_field,
+                 "GDP (Purchasing Power Parity)": gdp_ppp_field,
+                 "GDP per capita (Purchasing Power Parity)": per_capita_field,
+                 "Natural Resources": natural_resources_field,
+                 "Religion": religion_field,
+                 "Language": language_field,
+                 "Ethnicity": ethnicity_field}
+
+    return func_dict.get(field_name, other_fields)
 
 
 def pdf_scraper(path_to_pdf):
@@ -781,9 +755,17 @@ def pdf_scraper(path_to_pdf):
         "Literacy",
     ]
 
-    nested_dict = {}
+    country_general = []
+    country_natural_resources = []
+    country_language = []
+    country_religion = []
+    country_ethnicity = []
+    country_import_partners = []
+    country_export_partners = []
 
     for name in os.listdir(path_to_pdf):
+
+        temp_general = []
         filepath = os.path.join(path_to_pdf, name)
 
         # scraping unformatted text using pdfminer.six
@@ -797,8 +779,7 @@ def pdf_scraper(path_to_pdf):
         # we split text by whitespaces and end-line characters, so text is presented as a list
         # where every word and set of any characters such as numbers has index
         text = text[0].split()
-
-        nested_dict[country_id] = {}
+        print(country_id)
 
         # searching for the date of last update for PDF and removing it from text
         last_update_index = [
@@ -811,54 +792,110 @@ def pdf_scraper(path_to_pdf):
         last_update = last_update.strip()
         del text[last_update_index[0][0]: last_update_index[0][0] + 4]
 
-        nested_dict[country_id]["last_update"] = last_update
+        temp_general.append(last_update)
 
         # We index text with get_index function
         index_dict = create_index(fields, text, country_id)
 
         # we work with fieldnames in reverse order, since we need to parse
         # text from end to begining
-        for fieldname in fields[::-1]:
+        for field_name in fields[::-1]:
 
+            field_func = FormatFieldData(field_name)
             # this handles some expections for Sudan and Chad, where
             # fields Chief of State and Head of Government are joined
-            if index_dict[fieldname] == [] and fieldname == "Chief of State":
-                nested_dict[country_id][fieldname] = " ".join(text[5:])
+            if index_dict[field_name] == [] and field_name == "Chief of State":
+                field_data = " ".join(text[5:])
 
             # some countries don't have some fields, like Literacy
             # so with such countries we set value for this fields to None
-            elif index_dict[fieldname] == []:
-                nested_dict[country_id][fieldname] = None
+            elif index_dict[field_name] == []:
+                field_data = None
 
             # This is main part, that works with most of the text.
             # It starts with the end of text and finds the last field
             # based on index that we got from get_index function
-            # It creates fieldname as a key, and content of text as a value
-            # then it deletes fieldname and content from the split text we work on.
-            # So one by one we delete each field from end to begining.
 
             else:
-                start_field = index_dict[fieldname][0]
-                start_content = index_dict[fieldname][1]
+                start_field = index_dict[field_name][0]
+                start_content = index_dict[field_name][1]
 
-                nested_dict[country_id][fieldname] = " ".join(
-                    text[start_content:])
+                field_data = " ".join(text[start_content:])
                 del text[start_field:]
 
-    # some countries have field content NA or N/A
-    # we replace them with None for consistency
-    nested_dict = str(nested_dict).replace("'NA'", "None")
-    nested_dict = nested_dict.replace("'N/A'", "None")
-    nested_dict = nested_dict.replace("N/A", "None")
+            if field_data == "NA" or field_data == "N/A":
+                field_data = None
 
-    nested_dict = ast.literal_eval(nested_dict)
+            three_arg_fields = ["Imports", "Exports",
+                                "Religion", "Ethnicity", "Language"]
+            two_arg_fields = ["Population", "Area", "Natural Resources"]
 
-    print("Finished scraping text")
-    return nested_dict
+            if field_name in three_arg_fields:
+                temp = field_func(country_id, field_data, field_name)
+
+                if field_name == "Imports":
+                    temp_general.extend(temp[0])
+                    temp_list = [cm.CountryImportPartners(
+                        *item) for item in temp[1]]
+                    country_import_partners.extend(temp_list)
+
+                elif field_name == "Exports":
+                    temp_general.extend(temp[0])
+                    temp_list = [cm.CountryExportPartners(
+                        *item) for item in temp[1]]
+                    country_export_partners.extend(temp_list)
+
+                elif field_name == "Ethnicity":
+                    temp_list = [cm.CountryEthnicity(*item) for item in temp]
+                    country_ethnicity.extend(temp_list)
+
+                elif field_name == "Religion":
+                    temp_list = [cm.CountryEthnicity(*item) for item in temp]
+                    country_religion.extend(temp_list)
+
+                elif field_name == 'Language':
+                    temp_list = [cm.CountryLanguage(*item) for item in temp]
+                    country_language.extend(temp_list)
+
+            elif field_name in two_arg_fields:
+                temp = field_func(country_id, field_data)
+
+                if field_name == "Natural Resources":
+                    temp_list = [cm.CountryNaturalResources(
+                        *item) for item in temp]
+                    country_natural_resources.extend(temp_list)
+
+                else:
+                    temp_general.extend(temp)
+
+            else:
+                temp = field_func(field_data)
+                temp_general.extend(temp)
+
+        temp_general.append(country_id)
+        temp_general = cm.CountryGeneral(*temp_general[::-1])
+        country_general.append(temp_general)
+        # print(country_id, country_general)
+        # print(country_id, country_natural_resources)
+        # print(country_id, country_language)
+        # print(country_id, country_religion)
+        # print(country_id, country_ethnicity)
+        # print(country_id, country_import_partners)
+        # print(country_id, country_export_partners)
+
+    print("Finished scraping PDF")
+    return [country_general,
+            country_natural_resources,
+            country_language,
+            country_religion,
+            country_ethnicity,
+            country_import_partners,
+            country_export_partners]
 
 
-# with open('test.txt', 'r') as fr:
-#     obj = ast.literal_eval(fr.read())
+obj = pdf_scraper('pdf')
 
-
-# db_obj = preparing_db_objects(obj)
+# for i in obj:
+#     print(i)
+#     print('')
+#     print('')
