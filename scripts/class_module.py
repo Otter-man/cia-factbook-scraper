@@ -50,3 +50,44 @@ class Country:
         self.literacy = literacy
         self.literacy_last_update = literacy_last_update
         self.last_update_of_pdf = last_update_of_pdf
+
+
+class Language:
+    def __init__(self, country_name, language, percent, officiality, year):
+        self.country_name = country_name
+        self.language = language
+        self.percent = percent
+        self.officiality = officiality
+        self.year = year
+
+
+class Religion:
+    def __init__(self, country_name, religion, percent, year):
+        self.country_name = country_name
+        self.religion = religion
+        self.percent = percent
+        self.year = year
+
+
+class Ethnicity:
+    def __init__(self, country_name, ethnicity, percent, year):
+        self.country_name = country_name
+        self.ethnicity = ethnicity
+        self.percent = percent
+        self.year = year
+
+
+class ImportPartners:
+    def __init__(self, country_name, import_partner, import_percent, import_year):
+        self.country_name = country_name
+        self.import_partner = import_partner
+        self.import_percent = import_percent
+        self.import_year = import_year
+
+
+class ExportPartners:
+    def __init__(self, country_name, import_partner, import_percent, import_year):
+        self.country_name = country_name
+        self.export_partner = export_partner
+        self.export_percent = export_percent
+        self.export_year = export_year
