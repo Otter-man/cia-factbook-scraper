@@ -1,9 +1,9 @@
 import sqlite3
 import os
-
+import ast
 from scripts.pdf_download import pdf_link_scraper, download_pdf
-from scripts.pdf_to_text_script import pdf_scraper
-from scripts.prepare_data import preparing_db_objects
+from scripts.pdf_to_text_script import pdf_scraper, preparing_db_objects
+# from scripts.prepare_data import preparing_db_objects
 
 
 def create_db(dbfile):
@@ -117,11 +117,19 @@ def write_to_db(executor, table, db_obj):
     depending of the table and db object it uses different
     ways to write"""
 
+    def write_row_to_db(values):
+        placeholder = tuple('?' for i in range(len(values)))
+        placeholder = str(placeholder).replace("\'", '')
+        executor.execute(
+            f"INSERT INTO '{table}' values {placeholder}", values)
+
     for country in db_obj:
         if isinstance(db_obj[country], dict):
+
             db_val = db_obj[country].values()
-            db_val = str(tuple(db_val)).replace("'NULL'", "NULL")
-            executor.execute(f"INSERT INTO '{table}' values {db_val}")
+            db_val = tuple(db_val)
+
+            write_row_to_db(db_val)
 
         else:
             for item in db_obj[country]:
@@ -130,8 +138,9 @@ def write_to_db(executor, table, db_obj):
                 else:
                     db_val = [country] + item
 
-                db_val = str(tuple(db_val)).replace("'NULL'", "NULL")
-                executor.execute(f"INSERT INTO '{table}' values {db_val}")
+                db_val = tuple(db_val)
+
+                write_row_to_db(db_val)
 
 
 # links = pdf_link_scraper()  # make dictionary of links for downloading PDF
@@ -139,7 +148,10 @@ def write_to_db(executor, table, db_obj):
 # download_pdf(links)  # download PDF to folder "pdf"
 print("Starting scraping PDFs for text...")
 # parse pdf, return dict object with text sorted by fields
-obj = pdf_scraper("pdf")
+# obj = pdf_scraper("pdf")
+
+with open('test.txt', 'r') as fr:
+    obj = ast.literal_eval(fr.read())
 
 db_objects = preparing_db_objects(
     obj
@@ -162,7 +174,7 @@ if not os.path.exists("data"):
     os.mkdir("data")
 
 # DB name
-DB_FILE = "data/summaries.db"
+DB_FILE = "data/summaries5.db"
 
 create_db(DB_FILE)  # creates DB with 7 tables
 print("Finished creating db")

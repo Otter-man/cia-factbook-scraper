@@ -273,15 +273,11 @@ def FormatFieldData(field_name):
         if field_data is None:
             rate_urb, urb_pop_year, urb_pop = field_data, field_data, field_data
         else:
-            try:
-                if match[3][0] != ".":
-                    rate_urb = match[3].replace(" ", "")
-                else:
-                    rate_urb = "0" + match[3].replace(" ", "")
-            except TypeError as e:
-                print(e)
-                print(field_name)
-                print(field_data)
+            if match[3][0] != ".":
+                rate_urb = match[3].replace(" ", "")
+            else:
+                rate_urb = "0" + match[3].replace(" ", "")
+
             urb_pop = match[1].replace(" ", "")
             urb_pop_year = match[2]
         try:
@@ -522,8 +518,9 @@ def FormatFieldData(field_name):
         resource_list = [resource.strip()
                          for resource in resource_list.split(",")]
 
+        temp_resources = []
+
         for resource in resource_list:
-            temp_resources = []
 
             if resource[:4] == "and ":
                 resource = resource[4:]
@@ -850,7 +847,7 @@ def pdf_scraper(path_to_pdf):
                     country_ethnicity.extend(temp_list)
 
                 elif field_name == "Religion":
-                    temp_list = [cm.CountryEthnicity(*item) for item in temp]
+                    temp_list = [cm.CountryReligion(*item) for item in temp]
                     country_religion.extend(temp_list)
 
                 elif field_name == 'Language':
@@ -875,13 +872,6 @@ def pdf_scraper(path_to_pdf):
         temp_general.append(country_id)
         temp_general = cm.CountryGeneral(*temp_general[::-1])
         country_general.append(temp_general)
-        # print(country_id, country_general)
-        # print(country_id, country_natural_resources)
-        # print(country_id, country_language)
-        # print(country_id, country_religion)
-        # print(country_id, country_ethnicity)
-        # print(country_id, country_import_partners)
-        # print(country_id, country_export_partners)
 
     print("Finished scraping PDF")
     return [country_general,
@@ -891,14 +881,3 @@ def pdf_scraper(path_to_pdf):
             country_ethnicity,
             country_import_partners,
             country_export_partners]
-
-
-obj = pdf_scraper('pdf')
-
-for i in obj:
-    for x in i:
-        for k, v in vars(x).items():
-            print(k, v, type(v))
-        print('')
-    print('')
-    print('')
