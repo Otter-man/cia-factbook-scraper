@@ -43,13 +43,13 @@ class CountryGeneral:
         #: str: name of the US ambassador to the country
         self.us_ambassador = us_ambassador
 
-        #: int: total area of the country, sq km
+        #: float: total area of the country, sq km
         self.area_total = area_total
 
-        #: int: land area of the country, sq km
+        #: float: land area of the country, sq km
         self.area_land = area_land
 
-        #: int: water area of the country, sq km
+        #: float: water area of the country, sq km
         self.area_water = area_water
 
         #: str: description of climate of the country
@@ -88,22 +88,22 @@ class CountryGeneral:
         #: str: year and month of the last update of population data
         self.population_last_update = population_last_update
 
-        #: int: population growth, %
+        #: float: population growth, %
         self.population_growth = population_growth
 
         #: int: year of the last update of population growth data
         self.population_growth_last_update = population_growth_last_update
 
-        #: int: rate of urbanization, %
+        #: float: rate of urbanization, %
         self.rate_of_urbanization = rate_of_urbanization
 
-        #: int: size of urban population in country, %
+        #: float: size of urban population in country, %
         self.urban_population = urban_population
 
         #: int: year of the last update of urban population data
         self.urban_population_last_update = urban_population_last_update
 
-        #: int: literacy among population, %
+        #: float: literacy among population, %
         self.literacy = literacy
 
         #: int: last update of literacy data
