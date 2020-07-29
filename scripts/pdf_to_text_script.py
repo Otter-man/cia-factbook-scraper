@@ -155,9 +155,9 @@ def percent_taker(category, a_list):
             element = element.replace(";", ",")
 
             if "official" in element:
-                officiality = "Yes"
+                officiality = True
             else:
-                officiality = "No"
+                officiality = False
 
             element = element.replace(" (official)", "")
 
@@ -552,7 +552,7 @@ def FormatFieldData(field_name):
         match = re.search(pattern, str(religion_list))
 
         try:
-            year = match[0].strip()
+            year = int(match[0].strip())
         except:
             year = None
 
@@ -583,7 +583,7 @@ def FormatFieldData(field_name):
         matches = re.search(pattern, str(language_list))
 
         try:
-            year = matches[1].strip()
+            year = int(matches[1].strip())
             language_list = re.sub(pattern, "", language_list)
         except:
             year = None
