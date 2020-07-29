@@ -291,7 +291,7 @@ def FormatFieldData(field_name):
         except (ValueError, TypeError):
             pass
 
-        return [rate_urb, urb_pop_year, urb_pop]
+        return [urb_pop_year, urb_pop, rate_urb]
 
     def population_growth_field(field_data):
         # here we extract two columns pop. growth % and year of update
@@ -895,7 +895,10 @@ def pdf_scraper(path_to_pdf):
 
 obj = pdf_scraper('pdf')
 
-# for i in obj:
-#     print(i)
-#     print('')
-#     print('')
+for i in obj:
+    for x in i:
+        for k, v in vars(x).items():
+            print(k, v, type(v))
+        print('')
+    print('')
+    print('')
