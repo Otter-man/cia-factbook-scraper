@@ -614,7 +614,18 @@ def format_field_data(field_name):
         return [gdp_year, gdp]
 
     def per_capita_field(field_data):
-        # this blocks make two columns - gdp per capita and year of update
+        """Take data as str and return it as a list of int.
+
+        Args:
+            field_data (str): data for the current field.
+
+        Returns:
+            List of int.
+
+        Example:
+            >>>print(per_capita_field('$15,100 (2017 est.)'))
+            [2017, 15100]
+        """
         try:
             per_capita = field_data.split(" (")[0]
             per_capita_year = field_data.split(" (")[1][:5]
@@ -810,7 +821,8 @@ def format_field_data(field_name):
                  "Imports": imports_exports_field,
                  "Exports": imports_exports_field,
                  "Area": area_field,
-                 "GDP (Purchasing Power Parity)": gdp_ppp_field, "GDP per capita (Purchasing Power Parity)": per_capita_field,
+                 "GDP (Purchasing Power Parity)": gdp_ppp_field,
+                 "GDP per capita (Purchasing Power Parity)": per_capita_field,
                  "Natural Resources": natural_resources_field,
                  "Religion": religion_field,
                  "Language": language_field,
