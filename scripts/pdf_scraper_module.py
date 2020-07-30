@@ -920,16 +920,15 @@ def format_field_data(field_name):
     return return_func
 
 
-def pdf_scraper(path_to_pdf):
-    """Convert multiple PDF to text, return dictionary with all texts.
+def scrape_pdf(path_to_pdf):
+    """Convert PDF to text and scrape data from text.
 
     Args:
         path_to_pdf (str): path to folder, containing PDFs.
 
     Returns:
-        dict: nested dictionary, where str country name is a key and dict
-        is a value. Each value dict has str field name as a key and str
-        with text for that field as a value.
+        List of lists. Each nested list contains class objects as
+        elements.
     """
 
     # making parameters for PDFminer for this specific PDFs
