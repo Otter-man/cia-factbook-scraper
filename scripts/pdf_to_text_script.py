@@ -536,7 +536,7 @@ def format_field_data(field_name):
             List of float.
 
         Example:
-            >>>print(area_field('RUSSIA', 'Total: 17,098,242 sq km Land: 
+            >>>print(area_field('RUSSIA', 'Total: 17,098,242 sq km Land:
             16,377,742 sq km Water: 720,500 sq km'))
             [720500.0, 16377742.0, 17098242.0]
         """
@@ -808,7 +808,31 @@ def format_field_data(field_name):
         return language_list
 
     def ethnicity_field(country, field_data, field_name):
-        # this block is for "Ethnicity" table
+        """Take data as str and return it as list of lists.
+
+        Args:
+            country (str): for handling exceptions and forming return.
+            field_data (str): data for current field.
+            field_name (str): for passing to split_percents() func.
+
+        Return:
+            List of lists.
+
+            Each nested list contains four elements: country name as str,
+            ethnicity name as str, share of population for ethnicity as
+            float and year of the last update of data as int.
+
+        Example:
+            >>>print(ethnicity_field('DENMARK', 'Danish (includes
+            Greenlandic (who are predominantly Inuit) and Faroese)
+            86.3%, Turkish 1.1%, other 12.6% (largest groups are Polish,
+            Syrian, German, Iraqi, and Romanian) (2018 est.) note: data
+            represent population by ancestry', 'Ethnicity'))
+
+            [['DENMARK', 'Danish', 86.3, '2018'],
+            ['DENMARK', 'Turkish', 1.1, '2018'],
+            ['DENMARK', 'other', 12.6, '2018']]
+        """
         ethnicity_list = field_data.replace(" %", "%")
 
         pattern = re.compile(r"\s\((\d\d\d\d).*?\)1?")
@@ -863,7 +887,18 @@ def format_field_data(field_name):
         return ethnicity_list
 
     def other_fields(field_data):
-        # pass the rest of fields as is to main table "country overview"
+        """Take data as str and return this str inside a list.
+
+        Args:
+            field_data (str): data for current field.
+
+        Return:
+            List with a single element.
+
+        Example:
+            >>>print(other_fields('Ambassador Carla SANDS'))
+            ['Ambassador Carla SANDS']
+        """
         try:
             field_data = field_data.replace(
                 "'", "’")
