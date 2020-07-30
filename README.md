@@ -4,7 +4,7 @@ Script to scrape PDF with one-page summaries of different countries from CIA web
 
 The same data is available on CIA webpage in more convenient form, but I wanted to exercise in working with PDF scraping and working with loosely formatted text.
 Script downloads PDF to local folder, scrapes text from it and pass it as a formatted data into sqlite DB.
-Example of the DB is in the /db folder.
+Example of the DB is in the data folder.
 
 CIA-webpage used as a source for PDF available here:
 https://www.cia.gov/library/publications/resources/the-world-factbook/docs/one_page_summaries.html
