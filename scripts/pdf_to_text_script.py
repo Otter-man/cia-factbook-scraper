@@ -57,9 +57,8 @@ def create_index(fields, text_split, country_id):
             item_list = ["Area,"]
         elif country_id == "IRAQ" and item == "Urbanization":
             item_list = ["2003Urbanization"]
-        elif (
-            country_id == "TURKMENISTAN" or country_id == "MAURITIUS"
-        ) and item == "Economic Overview":
+        elif (country_id in ("TURKMENISTAN", "MAURITIUS")
+              and item == "Economic Overview"):
             item_list = ["ECONOMY"]
 
         # This part finds indexes for every field name.
@@ -151,9 +150,10 @@ def split_percents(field_name, a_list):
     """
     return_list = []
     language_list = []
-    if a_list == [None] and field_name == "Language":
+    if a_list is None and field_name == "Language":
         return [[None, None, False]]
-    elif a_list is None:
+
+    if a_list is None:
         return [[None, None]]
 
     for element in a_list:
@@ -171,10 +171,7 @@ def split_percents(field_name, a_list):
 
             element = element.replace(";", ",")
 
-            if "official" in element:
-                officiality = True
-            else:
-                officiality = False
+            officiality = "official" in element
 
             element = element.replace(" (official)", "")
 
@@ -188,11 +185,9 @@ def split_percents(field_name, a_list):
             index = index[0]
 
             if field_name == "Religion":
-                if (
-                    not element_listed[index - 1].isalpha()
-                    and "non-" not in element_listed[index - 1]
-                    and "/" not in element_listed[index - 1]
-                ):
+                if (not element_listed[index - 1].isalpha()
+                        and "non-" not in element_listed[index - 1]
+                        and "/" not in element_listed[index - 1]):
 
                     percentage = "".join(element_listed[index - 1: index + 1])
                     parted = " ".join(element_listed[: index - 1])
@@ -789,7 +784,7 @@ def format_field_data(field_name):
                              for i in language_list.split(",")]
 
         except AttributeError:
-            language_list = [None]
+            language_list = None
 
         # handles exception with formating on some countries
         if country == "SPAIN":
@@ -1042,7 +1037,7 @@ def pdf_scraper(path_to_pdf):
                 field_data = " ".join(text[start_content:])
                 del text[start_field:]
 
-            if field_data == "NA" or field_data == "N/A":
+            if field_data in ("NA", "N/A"):
                 field_data = None
 
             three_arg_fields = ["Imports", "Exports",
