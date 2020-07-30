@@ -1,8 +1,8 @@
 """Main script to run all other modules in project."""
 import os
 import scripts.sqlite_module as sm
-from scripts.pdf_download import pdf_link_scraper, download_pdf
-from scripts.pdf_to_text_script import pdf_scraper
+from scripts.pdf_downloader_module import pdf_link_scraper, download_pdf
+from scripts.pdf_scraper_module import pdf_scraper
 
 
 links = pdf_link_scraper()  # make dictionary of links for PDF
