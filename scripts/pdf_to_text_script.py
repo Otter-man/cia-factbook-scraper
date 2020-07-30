@@ -526,14 +526,14 @@ def format_field_data(field_name):
         return [act_year, activity_size], partners_listed
 
     def area_field(country, field_data):
-        """Take data for area as str and return it as a list of int.
+        """Take data for area as str and return it as a list of float.
 
         Args:
             country (str): country name, used for handling exceptions.
             field_data (str): data about current field.
 
         Returns:
-            List of str.
+            List of float.
 
         Example:
             >>>print(area_field('RUSSIA', 'Total: 17,098,242 sq km Land: 
@@ -582,7 +582,18 @@ def format_field_data(field_name):
         return [water, land, total]
 
     def gdp_ppp_field(field_data):
-        # this field we make columns GDP size and year of update
+        """Take data as str and return it as a list of int.
+
+        Args:
+            field_data (str): data for the current field.
+
+        Returns:
+            List of int.
+
+        Example:
+            >>>print(gdp_ppp_field('$20.44 billion (2017 est.)'))
+            [2017, 20440000000]
+        """
         pattern = re.compile(
             r"(\$[0-9\.]+)\s(bi+llion|million|trillion)\s\((20[0-9]{2})"
         )
@@ -799,8 +810,7 @@ def format_field_data(field_name):
                  "Imports": imports_exports_field,
                  "Exports": imports_exports_field,
                  "Area": area_field,
-                 "GDP (Purchasing Power Parity)": gdp_ppp_field,
-                 "GDP per capita (Purchasing Power Parity)": per_capita_field,
+                 "GDP (Purchasing Power Parity)": gdp_ppp_field, "GDP per capita (Purchasing Power Parity)": per_capita_field,
                  "Natural Resources": natural_resources_field,
                  "Religion": religion_field,
                  "Language": language_field,
