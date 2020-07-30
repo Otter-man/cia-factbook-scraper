@@ -992,7 +992,6 @@ def pdf_scraper(path_to_pdf):
             country_id = "SAO TOME AND PRINCIPE"
 
         text = text[0].split()
-        print(country_id)
 
         # searching for the date of last update for PDF and removing it
         last_update_index = [
@@ -1093,8 +1092,8 @@ def pdf_scraper(path_to_pdf):
     print("Finished scraping PDF")
     return [country_general,
             country_natural_resources,
-            country_language,
-            country_religion,
-            country_ethnicity,
+            country_export_partners,
             country_import_partners,
-            country_export_partners]
+            country_ethnicity,
+            country_language,
+            country_religion]
