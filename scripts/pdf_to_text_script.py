@@ -681,8 +681,26 @@ def format_field_data(field_name):
         return resource_list
 
     def religion_field(country, field_data, field_name):
-        # this blocks is used to prepare 'Religion' table
-        # with the help of percent_taker function
+        """Take data as str and return it as list of lists.
+
+        Args:
+            country (str): for handling exceptions and forming return.
+            field_data (str): data for current field.
+            field_name (str): for passing to split_percents() func.
+
+        Return:
+            List of lists.
+
+            Each nested list contains four elements: country name as str,
+            religion name as str, share of population for religion as
+            float and year of the last update of data as int.
+
+        Example:
+            >>>print(religion_field('CHAD', 'Muslim 52%, Christian 44%
+            (2014-15 est.)', 'Religion'))
+            [['CHAD', 'Muslim', 52.0, 2014],
+            ['CHAD', 'Christian', 44.0, 2014]]
+        """
         try:
             religion_list = field_data.split("note")[0]
         except AttributeError:
