@@ -12,7 +12,7 @@ print("Downloading PDFs...")
 download_pdf(links)  # download PDF to folder "pdf"
 print("Starting scraping PDFs for text...")
 
-data_containers = scrape_pdf('pdf')
+data_containers = scrape_pdf('pdf')  # create list with data containers
 print("Finished preparing objects")
 
 tables = [
@@ -28,12 +28,12 @@ tables = [
 if not os.path.exists("data"):
     os.mkdir("data")
 
-DB_FILE = "data/summaries_new.db"
+DB_FILE = "data/summaries_new.db"  # path to DB file
 
-sm.create_db(DB_FILE)
+sm.create_db(DB_FILE)  # check DB file, create file if it doesn't exist
 print("Finished creating db")
 
-with sm.connect_to_db(DB_FILE) as conn:
+with sm.connect_to_db(DB_FILE) as conn:  # open connection, write to DB
     cur = conn.cursor()
     for i in zip(tables, data_containers):
         sm.write_to_db(cur, i[0], i[1])
