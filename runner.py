@@ -28,7 +28,7 @@ tables = [
 if not os.path.exists("data"):
     os.mkdir("data")
 
-DB_FILE = "data/summaries_new.db"  # path to DB file
+DB_FILE = "data/summaries.db"  # path to DB file
 
 sm.create_db(DB_FILE)  # check DB file, create file if it doesn't exist
 print("Finished creating db")
