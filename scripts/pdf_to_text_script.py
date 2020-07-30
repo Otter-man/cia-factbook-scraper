@@ -995,14 +995,14 @@ def pdf_scraper(path_to_pdf):
         country_id = text.pop(0)
         if country_id == "SAO TOMEAND PRINCIPE":
             country_id = "SAO TOME AND PRINCIPE"
-        # we split text by whitespaces and end-line characters, so text is presented as a list
-        # where every word and set of any characters such as numbers has index
+
         text = text[0].split()
         print(country_id)
 
-        # searching for the date of last update for PDF and removing it from text
+        # searching for the date of last update for PDF and removing it
         last_update_index = [
-            (i, i + 2) for i in range(len(text)) if text[i: i + 2] == ["as", "of"]
+            (i, i + 2) for i in range(len(text))
+            if text[i: i + 2] == ["as", "of"]
         ]
 
         last_update = " ".join(
