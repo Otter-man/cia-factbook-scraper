@@ -640,8 +640,23 @@ def format_field_data(field_name):
         return [per_capita_year, per_capita]
 
     def natural_resources_field(country, field_data):
-        # this block we use to create table "natural resources"
+        """Take data as str and return it as a list of lists.
 
+        Args:
+            country (str): country name forming return.
+            field_data (str): data for the current field.
+
+        Returns:
+            List of lists.
+
+            Each nested list contains two elements - country name and
+            resource name, both as str.
+
+        Example:
+            >>>print(natural_resources_field('URUGUAY', hydropower,
+            minor minerals'))
+            [['URUGUAY', 'hydropower'], ['URUGUAY', 'minor minerals']]
+        """
         resource_list = field_data.split("note")[0]
         resource_list = [resource.strip()
                          for resource in resource_list.split(",")]
