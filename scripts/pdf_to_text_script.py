@@ -734,7 +734,31 @@ def format_field_data(field_name):
         return religion_list
 
     def language_field(country, field_data, field_name):
-        # this block used for "Language" table with percent_taker
+        """Take data as str and return it as list of lists.
+
+        Args:
+            country (str): for handling exceptions and forming return.
+            field_data (str): data for current field.
+            field_name (str): for passing to split_percents() func.
+
+        Return:
+            List of lists.
+
+            Each nested list contains five elements: country name as str,
+            language name as str, share of population for language as
+            float, official status for language in country as bool and
+            year of the last update of data as int.
+
+        Example:
+            >>>print(language_field('CHILE', 'Spanish 99.5% (official),
+            English 10.2%, indigenous 1%, other 2.3%, unspecified 0.2%1
+            (2012 est.)', 'Language'))
+            [['CHILE', 'Spanish', 99.5, True, 2012],
+            ['CHILE', 'English', 10.2, False, 2012],
+            ['CHILE', 'indigenous', 1.0, False, 2012],
+            ['CHILE', 'other', 2.3, False, 2012],
+            ['CHILE', 'unspecified', 0.2, False, 2012]]
+        """
         language_list = field_data
 
         pattern = re.compile(r"\s\((\d\d\d\d) (est.|census)\)")
