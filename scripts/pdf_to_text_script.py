@@ -1,9 +1,9 @@
 """Convert PDF to text and scrape data from it."""
 import os
-import ast
 import re
-import class_module as cm
 from pdfminer import high_level, layout
+import scripts.class_module as cm
+# import class_module as cm
 
 
 def create_index(fields, text_split, country_id):
@@ -43,7 +43,6 @@ def create_index(fields, text_split, country_id):
     if "'Economic', 'Overview'" in str(text_split):
         del text_split[text_split.index("ECONOMY")]
 
-    # geting index for each field
     for item in fields:
 
         item_list = item.split()
@@ -64,9 +63,7 @@ def create_index(fields, text_split, country_id):
             item_list = ["ECONOMY"]
 
         # This part finds indexes for every field name.
-        # Every index consists of index of the first word of field name
-        # and index of the last word of field name, stored in a tuple.
-        # Tuples are stored in a list.
+        # While searching, indexes stored inside a tuple inside a list.
         # In most cases there is only one tuple for each field name, but
         # there are some exceptions.
         index = [
@@ -89,11 +86,11 @@ def create_index(fields, text_split, country_id):
     return index_dict
 
 
-def convert_big_str_numbers(big_number):
+def convert_big_str_numbers(big_num):
     """Convert big number written with numbers and words to int.
 
     Args:
-        big_number (str): number, written with numbers and words.
+        big_num (str): number, written with numbers and words.
 
     Returns:
         int: same number as an int.
@@ -102,41 +99,61 @@ def convert_big_str_numbers(big_number):
         >>>print(convert_big_str_numbers('101.11 billions'))
         101110000000
     """
-    big_number = big_number.replace("$", "")
+    big_num = big_num.replace("$", "")
 
-    big_number = big_number.split(" ")
+    big_num = big_num.split(" ")
 
-    if "million" in str(big_number):
+    if "million" in str(big_num):
         zero = "000000"
-    elif "billion" in str(big_number):
+    elif "billion" in str(big_num):
         zero = "000000000"
-    elif "trillion" in str(big_number):
+    elif "trillion" in str(big_num):
         zero = "000000000000"
     else:
         zero = "000000000"
 
-    big_number = big_number[0].split(".")
+    big_num = big_num[0].split(".")
     try:
-        big_number = f"{big_number[0]}{big_number[1]}{zero[len(big_number[1]):]}"
-    except:
-        big_number = f"{big_number[0]}{zero}"
+        big_num = f"{big_num[0]}{big_num[1]}{zero[len(big_num[1]):]}"
+    except IndexError:
+        big_num = f"{big_num[0]}{zero}"
 
-    return int(big_number)
+    return int(big_num)
 
 
-def percent_taker(category, a_list):
-    """this function takes data from FormatPDFData
-    for language, ethnicity, religion, import and export partners
-    and returns nested lists where every list contains item of category
-    (religion, ethnos, language) and % of population that uses it for
-    for every category. For language it also returns whethere language is
-    official in country or part of the country"""
+def split_percents(field_name, a_list):
+    """Split each element in a list of str to str and float/None.
 
+    Takes a list of str, in each element searches for number and coverts
+    it to a list of two elements - a string and a number as a float, if 
+    number is found. If number is not found, second element is a None.
+
+    Args:
+        field_name (str): name of the field for handling special cases.
+        a_list (list of str): data for the field.
+
+    Returns:
+        List of lists, each nested list has two elements: str and float.
+        If field_name is "Language" each nested list also contains a
+        bool. Bool shows if there is a word "Official" in a str.
+
+    Examples:
+        >>>print(split_percents("Language",[Russian 65% (Official), 
+        English 3.7%]))
+        [['Russian', 65.0, True], ["English", 3.7, False]]
+        >>>print(split_percents("Religion", [Muslim 97.1%, other]))
+        [['Muslim', 97.1],['other', None]]
+        >>>print(split_percents("Imports",['Brazil 31.9%',
+        'Argentina 15.9%', 'Chile 6.9%']))
+        [['Brazil', 31.9], ['Argentina', 15.9], ['Chile', 6.9]]
+
+
+    """
     return_list = []
     language_list = []
-    if a_list == [None] and category == "Language":
-        return [[None, None, 'No']]
-    elif a_list == None:
+    if a_list == [None] and field_name == "Language":
+        return [[None, None, False]]
+    elif a_list is None:
         return [[None, None]]
 
     for element in a_list:
@@ -150,7 +167,7 @@ def percent_taker(category, a_list):
         elif element[:11] == "there is a ":
             element = element[11:]
 
-        if category == "Language":
+        if field_name == "Language":
 
             element = element.replace(";", ",")
 
@@ -170,7 +187,7 @@ def percent_taker(category, a_list):
         try:
             index = index[0]
 
-            if category == "Religion":
+            if field_name == "Religion":
                 if (
                     not element_listed[index - 1].isalpha()
                     and "non-" not in element_listed[index - 1]
@@ -187,20 +204,20 @@ def percent_taker(category, a_list):
                 percentage = element_listed[index]
                 parted = " ".join(element_listed[:index])
 
-        except:
+        except IndexError:
             percentage = None
             parted = " ".join(element_listed)
 
         try:
             percentage = percentage.replace("%", "")
             percentage = float(percentage)
-        except:
+        except (AttributeError, ValueError):
             pass
 
-        # for Language we build two identical lists, since sometimes
-        # for language combo Country + language is not unique and we need to
-        # sort it for duplicates later using two lists
-        if category == "Language":
+        # for Language we build two identical lists, since we need value
+        # country+language to be unique and we need to remove duplicates
+
+        if field_name == "Language":
             return_list.append([parted, percentage, officiality])
             language_list.append([parted, percentage, officiality])
         else:
@@ -208,15 +225,13 @@ def percent_taker(category, a_list):
 
     # we remove duplicate languages from main list, by turning it to
     # dictionary with the language + percent as a key
-    # but this doesn't check the "official" part, so duplicate with
-    # official status can be accidently removed
-    if category == "Language":
+    if field_name == "Language":
         return_list = list(dict((x[0] + str(x[1]), x)
                                 for x in return_list).values())
 
         # To check that the language official status isn't lost, we
         # compare elements from the second list, wich we didn't modify.
-        # If the langugae with official status was removed as a duplicate
+        # If the language with official status was removed as a duplicate
         # we replace it in the main list
         for item in language_list:
             if item not in return_list and item[2] == "Yes":
@@ -230,22 +245,33 @@ def percent_taker(category, a_list):
     return return_list
 
 
-def FormatFieldData(field_name):
-    """
-    this function takes dict object prepared by pdf_scraper()
-    and breaks it into 7 different dictionaries, each with data
-    for specific table in the sqlite DB.
-    Tables will be 'Country overview' with overview of the country,
-    Natural Resources, Religion, Language, Ethnicity, Export Partners
-    and Import Partners.
-    Function returns dict fo Country Overview, and list that contains all
-    other dicts
+def format_field_data(field_name):
+    """Take field name and return appropriate function to format data.
+
+    Args:
+        field_name (str): name of the current field.
+
+    Returns:
+        Another function.
     """
 
     def literacy_field(field_data):
-        # in literacy field we extract two columns - "literacy_%_of_population"
-        # and "literacy year updated" using regexp
-        if field_data == None:
+        """Take str and return list with float and int.
+
+        Takes literacy data and extracts two data points -  year of the 
+        last update of data and share of literate population.
+
+        Args:
+            field_data (str): data for the current field.
+
+        Returns:
+            list: contains two elements, int and float.
+
+        Example:
+            >>>print(literacy_field('94.7% (2018)')
+            [2018, 94.7]
+        """
+        if field_data is None:
             lit_year, lit_percent = field_data, field_data
         else:
             pattern = re.compile(r"([0-9\.]{0,4}%).*\((20..)")
@@ -263,8 +289,24 @@ def FormatFieldData(field_name):
         return [lit_year, lit_percent]
 
     def urbanization_field(field_data):
-        # in urbanization field we extract three columns - "rate of urbanization"
-        # and "urban population %" and "urban population year of update" using regexp
+        """Take str and return list with int and two floats.
+
+        Takes urbanization data and extracts three data points - year of
+        the last update of data, share of urban population and annual
+        rate of change of urbanization for 2015-2020.
+
+        Args:
+            field_data (str): data for the current field.
+
+        Returns:
+            list: contains three elements, int and two floats.
+
+        Example:
+            >>>print(urbanization_field('urban population: 62.2% of total
+            population (2020)rate of urbanization: 1.71% annual rate of
+            change (2015-20 est.)'))
+            [2020, 62.2, 1.71]
+        """
         pattern = re.compile(
             r"\s?([0-9\. ]{1,5}\%).*\((20..)\)?.*urbanization: ([\-0-9\. ]{1,5}\%)"
         )
@@ -290,7 +332,21 @@ def FormatFieldData(field_name):
         return [urb_pop_year, urb_pop, rate_urb]
 
     def population_growth_field(field_data):
-        # here we extract two columns pop. growth % and year of update
+        """Take str and return list with int and float.
+
+        Takes population growth data and extracts two data points - year
+        of the last update of data and population growth %
+
+        Args:
+            field_data (str): data for the current field.
+
+        Returns:
+            list: contains two elements, int and float.
+
+        Example:
+            >>>print(population_growth_field('1.16% (2020 est.)'))
+            [2020, 1.16]
+        """
         pattern = re.compile(r"([\-\.0-9 ]*\%).*(20\d\d)")
         match = re.search(pattern, str(field_data))
 
@@ -312,16 +368,27 @@ def FormatFieldData(field_name):
         return [pop_grow_year, pop_grow]
 
     def population_field(country, field_data):
-        # population field gives us population number and year of update
+        """Take str and return list with str and int.
 
-        # here we handle the only country in list wich is uninhabited
+        Takes country name and population data and extracts two data 
+        points - year of the last update of data and population size
+
+        Args:
+            country (str): country name, used for handling exceptions.
+            field_data (str): data for the current field.
+
+        Returns:
+            list: contains two elements, str and int.
+
+        Example:
+            >>>print(population_field('7.2 million (July 2020 est.)'))
+            ['July 2020', 7200000]
+        """
         if country == "FRENCH SOUTHERN AND ANTARCTIC LANDS":
             pop_year = None
             population = "0"
 
         else:
-            # we convert worded numbeer (like "1 billion") to an integer with
-            # using function big_number_converter()
             if "million" in str(field_data) or "billion" in str(field_data):
 
                 pattern = re.compile(
@@ -333,7 +400,7 @@ def FormatFieldData(field_name):
 
                 population = convert_big_str_numbers(population)
 
-                pop_year = match[3]
+                pop_year = match[3].strip()
 
             else:
                 pattern = re.compile(r"([0-9\,]*) \((.*) est")
@@ -349,10 +416,46 @@ def FormatFieldData(field_name):
         return [pop_year, int(population)]
 
     def imports_exports_field(country, field_data, field_name):
-        # this fields gives us two columns for each - import|export size and year of update
-        # with function "percent taker" we also create separate dictionaries for
-        # import|export partners
-        if field_data == None:
+        """Take imports|exports data and return list.
+
+        This function takes data from imports|exports field and extracts
+        two lists from it.
+
+        First list has two elements - year of the last update of data as
+        int and size of activity as int.
+
+        Second list contains lists as elements. Each nested list has four
+        elements - country name as str, name of partner as str, share of
+        total activity for this partner as float, year of the last update
+        of data as int.
+
+        Args:
+            country (str): name of country for handling exceptions.
+            field_data (str): data for the current field.
+            field_name (str): name of the current field for handling
+                exceptions.
+
+        Returns:
+            List containing two lists. 
+
+            First list has two elements - year of the last update of data
+            as int and size of activity as int.
+
+            Second list contains lists as elements. Each nested list has
+            four elements - country name as str, name of partner as str,
+            share of total activity for this partner as float, year of
+            the last update of data as int.
+
+        Example:
+            >>>print(imports_exports_field('ARMENIA', '$2.36 billion
+            (2017 est.)partners: Russia 24.2%, Bulgaria 12.8%, 
+            Switzerland 12% (2017)', "Exports"))
+
+            ([2017, 2360000000], [['ARMENIA', 'Russia', 24.2, 2017],
+            ['ARMENIA', 'Bulgaria', 12.8, 2017],
+            ['ARMENIA', 'Switzerland', 12.0, 2017]])
+        """
+        if field_data is None:
             activity_size, partners, act_year = (
                 field_data,
                 field_data,
@@ -385,17 +488,17 @@ def FormatFieldData(field_name):
                 act_year = field_data.split("(")[1][:5]
                 activity_size = "".join(field_data.split()[:2])
 
-        if act_year != None:
+        if act_year is not None:
             act_year = int(act_year.strip())
 
-        if activity_size != None:
+        if activity_size is not None:
             activity_size = convert_big_str_numbers(activity_size)
         # here we handle import|export partners for the second dictionary
         if partners is not None and partners != 'N/A':
             pattern = re.compile(r"\s\(.*?\)")
             match = re.search(pattern, partners)
 
-            # we clean unnecessary info with year, wich
+            # we clean unnecessary info with year, which
             # duplicates imports|export year of update
             # it is presented in every country except for imports sudan
             if field_name == "Imports" and country == "SUDAN":
@@ -416,13 +519,13 @@ def FormatFieldData(field_name):
             for item in partners:
                 ind = partners.index(item)
                 item = item.strip()
-                if item != "" and item != None and item[-1] != "%":
+                if item != "" and item is not None and item[-1] != "%":
                     item = item + "%"
                 partners[ind] = item
 
             # we create content for import|exports partners dictionary
             # with percent_taker function
-            partners_listed = percent_taker(field_name, partners)
+            partners_listed = split_percents(field_name, partners)
         else:
             partners_listed = [[None, None]]
 
@@ -463,7 +566,7 @@ def FormatFieldData(field_name):
                 water = field_data.lower().split("water: ")
                 water = water[1][: water[1].index(
                     " sq km")].replace(",", "")
-            except:
+            except ValueError:
                 water = "0"
 
         try:
@@ -485,13 +588,13 @@ def FormatFieldData(field_name):
         try:
             gdp = f"{match[1]} {match[2].replace('ii','i')}"
             gdp_year = match[3]
-        except:
+        except TypeError:
             gdp, gdp_year = None, None
 
-        if gdp_year != None:
+        if gdp_year is not None:
             gdp_year = int(gdp_year)
 
-        if gdp != None:
+        if gdp is not None:
             gdp = convert_big_str_numbers(gdp)
 
         return [gdp_year, gdp]
@@ -502,10 +605,10 @@ def FormatFieldData(field_name):
             per_capita = field_data.split(" (")[0]
             per_capita_year = field_data.split(" (")[1][:5]
             per_capita_year = per_capita_year.strip().replace(")", "")
-        except:
+        except AttributeError:
             per_capita, per_capita_year = None, None
 
-        if per_capita != None and per_capita_year != None:
+        if per_capita is not None and per_capita_year is not None:
             per_capita = int(per_capita[1:].replace(",", ""))
             per_capita_year = int(per_capita_year)
 
@@ -550,21 +653,21 @@ def FormatFieldData(field_name):
 
         try:
             year = int(match[0].strip())
-        except:
+        except TypeError:
             year = None
 
         # handles specific formating for ukraine
         if country == "UKRAINE":
             religion_list = re.sub(r"\(.*?\)\)", "", religion_list)
         # cleans code of things in parenthesis
-        if religion_list != None:
+        if religion_list is not None:
             religion_list = re.sub(r"\(.*?\)1?", "", religion_list)
 
             religion_list = [
                 relig.strip() for relig in religion_list.split(",")
             ]
 
-        religion_list = percent_taker(field_name, religion_list)
+        religion_list = split_percents(field_name, religion_list)
 
         for religion in religion_list:
             religion[:0] = [country]
@@ -582,7 +685,7 @@ def FormatFieldData(field_name):
         try:
             year = int(matches[1].strip())
             language_list = re.sub(pattern, "", language_list)
-        except:
+        except TypeError:
             year = None
 
         try:
@@ -615,7 +718,7 @@ def FormatFieldData(field_name):
         elif country == "MOZAMBIQUE":
             language_list[3] = language_list[3] + "%"
 
-        language_list = percent_taker(field_name, language_list)
+        language_list = split_percents(field_name, language_list)
         for language in language_list:
             language[:0] = [country]
             language.append(year)
@@ -632,7 +735,7 @@ def FormatFieldData(field_name):
         try:
             year = match[1].strip()
             ethnicity_list = ethnicity_list.replace(match[0], "")
-        except:
+        except TypeError:
             year = None
 
         pattern = re.compile(r"\s?\(.*?\)\s?")
@@ -641,7 +744,7 @@ def FormatFieldData(field_name):
         for inst in matches:
             ethnicity_list = ethnicity_list.replace(inst.group(0), " ")
 
-        # eception in formating for some countries
+        # exception in formating for some countries
         if country == "DENMARK":
             ethnicity_list = ethnicity_list.replace("and Faroese)", "")
         elif country == "BURUNDI":
@@ -671,7 +774,7 @@ def FormatFieldData(field_name):
         elif country == "DEMOCRATIC REPUBLIC OF THE CONGO":
             ethnicity_list = [ethnicity_list[0]]
 
-        ethnicity_list = percent_taker(field_name, ethnicity_list)
+        ethnicity_list = split_percents(field_name, ethnicity_list)
         for ethnos in ethnicity_list:
             ethnos[:0] = [country]
             ethnos.append(year)
@@ -700,7 +803,9 @@ def FormatFieldData(field_name):
                  "Language": language_field,
                  "Ethnicity": ethnicity_field}
 
-    return func_dict.get(field_name, other_fields)
+    return_func = func_dict.get(field_name, other_fields)
+
+    return return_func
 
 
 def pdf_scraper(path_to_pdf):
@@ -798,7 +903,7 @@ def pdf_scraper(path_to_pdf):
         # text from end to begining
         for field_name in fields[::-1]:
 
-            field_func = FormatFieldData(field_name)
+            field_func = format_field_data(field_name)
             # this handles some expections for Sudan and Chad, where
             # fields Chief of State and Head of Government are joined
             if index_dict[field_name] == [] and field_name == "Chief of State":
