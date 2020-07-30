@@ -34,7 +34,6 @@ print("Finished creating db")
 
 with sm.connect_to_db(DB_FILE) as conn:
     cur = conn.cursor()
-    print(type(cur))
     for i in zip(tables, data_containers):
         sm.write_to_db(cur, i[0], i[1])
 
