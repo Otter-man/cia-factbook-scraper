@@ -125,7 +125,7 @@ def split_percents(field_name, a_list):
     """Split each element in a list of str to str and float/None.
 
     Takes a list of str, in each element searches for number and coverts
-    it to a list of two elements - a string and a number as a float, if 
+    it to a list of two elements - a string and a number as a float, if
     number is found. If number is not found, second element is a None.
 
     Args:
@@ -138,7 +138,7 @@ def split_percents(field_name, a_list):
         bool. Bool shows if there is a word "Official" in a str.
 
     Examples:
-        >>>print(split_percents("Language",[Russian 65% (Official), 
+        >>>print(split_percents("Language",[Russian 65% (Official),
         English 3.7%]))
         [['Russian', 65.0, True], ["English", 3.7, False]]
         >>>print(split_percents("Religion", [Muslim 97.1%, other]))
@@ -256,9 +256,9 @@ def format_field_data(field_name):
     """
 
     def literacy_field(field_data):
-        """Take str and return list with float and int.
+        """Take data as str and return it as  list with float and int.
 
-        Takes literacy data and extracts two data points -  year of the 
+        Takes literacy data and extracts two data points -  year of the
         last update of data and share of literate population.
 
         Args:
@@ -289,7 +289,7 @@ def format_field_data(field_name):
         return [lit_year, lit_percent]
 
     def urbanization_field(field_data):
-        """Take str and return list with int and two floats.
+        """Take data as str and return it as list with int and float.
 
         Takes urbanization data and extracts three data points - year of
         the last update of data, share of urban population and annual
@@ -332,7 +332,7 @@ def format_field_data(field_name):
         return [urb_pop_year, urb_pop, rate_urb]
 
     def population_growth_field(field_data):
-        """Take str and return list with int and float.
+        """Take data as str and return it as a list with int and float.
 
         Takes population growth data and extracts two data points - year
         of the last update of data and population growth %
@@ -368,9 +368,9 @@ def format_field_data(field_name):
         return [pop_grow_year, pop_grow]
 
     def population_field(country, field_data):
-        """Take str and return list with str and int.
+        """Take data as str and return it as list with str and int.
 
-        Takes country name and population data and extracts two data 
+        Takes country name and population data and extracts two data
         points - year of the last update of data and population size
 
         Args:
@@ -416,18 +416,10 @@ def format_field_data(field_name):
         return [pop_year, int(population)]
 
     def imports_exports_field(country, field_data, field_name):
-        """Take imports|exports data and return list.
+        """Take imports|exports data and return it as a tuple.
 
         This function takes data from imports|exports field and extracts
         two lists from it.
-
-        First list has two elements - year of the last update of data as
-        int and size of activity as int.
-
-        Second list contains lists as elements. Each nested list has four
-        elements - country name as str, name of partner as str, share of
-        total activity for this partner as float, year of the last update
-        of data as int.
 
         Args:
             country (str): name of country for handling exceptions.
@@ -436,7 +428,7 @@ def format_field_data(field_name):
                 exceptions.
 
         Returns:
-            List containing two lists. 
+            Tuple containing two lists.
 
             First list has two elements - year of the last update of data
             as int and size of activity as int.
@@ -448,7 +440,7 @@ def format_field_data(field_name):
 
         Example:
             >>>print(imports_exports_field('ARMENIA', '$2.36 billion
-            (2017 est.)partners: Russia 24.2%, Bulgaria 12.8%, 
+            (2017 est.)partners: Russia 24.2%, Bulgaria 12.8%,
             Switzerland 12% (2017)', "Exports"))
 
             ([2017, 2360000000], [['ARMENIA', 'Russia', 24.2, 2017],
@@ -468,12 +460,12 @@ def format_field_data(field_name):
             )
             match = re.search(pattern, field_data)
 
-            # this block handles exception in formating in ETHIOPIA
             if field_name == "Imports" and country == "ETHIOPIA":
                 partners = field_data.split(") ")[1]
 
             else:
-                # this block handles countries which don't have import|export partners written
+                # this block handles countries which don't have
+                # import|export partners written
                 try:
                     partners = field_data.split(
                         "partners")[1].replace(": ", "")
@@ -493,20 +485,18 @@ def format_field_data(field_name):
 
         if activity_size is not None:
             activity_size = convert_big_str_numbers(activity_size)
-        # here we handle import|export partners for the second dictionary
+
         if partners is not None and partners != 'N/A':
             pattern = re.compile(r"\s\(.*?\)")
             match = re.search(pattern, partners)
 
             # we clean unnecessary info with year, which
             # duplicates imports|export year of update
-            # it is presented in every country except for imports sudan
             if field_name == "Imports" and country == "SUDAN":
                 pass
             else:
                 partners = partners.replace(match[0], "")
 
-            # handles the mistake in text for France import partners
             if field_name == "Imports" and country == "FRANCE":
                 partners = partners.replace("Belgium", "Belgium ")
 
@@ -536,7 +526,20 @@ def format_field_data(field_name):
         return [act_year, activity_size], partners_listed
 
     def area_field(country, field_data):
-        # this block makes 3 columns - area land, water and total area.
+        """Take data for area as str and return it as a list of int.
+
+        Args:
+            country (str): country name, used for handling exceptions.
+            field_data (str): data about current field.
+
+        Returns:
+            List of str.
+
+        Example:
+            >>>print(area_field('RUSSIA', 'Total: 17,098,242 sq km Land: 
+            16,377,742 sq km Water: 720,500 sq km'))
+            [720500.0, 16377742.0, 17098242.0]
+        """
         if country == "FRENCH SOUTHERN AND ANTARCTIC LANDS":
             total, land, water = None, None, None
 
@@ -573,7 +576,7 @@ def format_field_data(field_name):
             total = float(total)
             land = float(land)
             water = float(water)
-        except (ValueError, TypeError):
+        except TypeError:
             pass
 
         return [water, land, total]
