@@ -1,4 +1,4 @@
-"""Module to run all other modules in project."""
+"""Main script to run all other modules in project."""
 import os
 import scripts.sqlite_module as sm
 from scripts.pdf_download import pdf_link_scraper, download_pdf
