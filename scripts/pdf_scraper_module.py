@@ -1,4 +1,4 @@
-"""Convert PDF to text and scrape data from it."""
+"""Module for converting PDF to text and scraping data from it."""
 import os
 import re
 from pdfminer import high_level, layout
