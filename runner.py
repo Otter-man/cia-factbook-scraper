@@ -21,7 +21,7 @@ print("Finished downloading all PDFs")
 
 print("Starting scraping PDFs for text...")
 
-data_containers = scrape_pdf('pdf')  # create list with data containers
+data_containers = scrape_pdf(PDF_FOLDER_PATH)  # scrape data to lists
 print("Finished preparing objects")
 
 tables = [
