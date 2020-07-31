@@ -15,13 +15,13 @@ if not os.path.exists(PDF_FOLDER_PATH):
     os.mkdir(PDF_FOLDER_PATH)
 
 for block in links:
-    try:
+    if len(block) == 5:
         # download PDF 5 at a time
         pd.download_pdf_multi(block, PDF_FOLDER_PATH)
-    except IndexError:
-        for item in block:
-            # download PDF from last block one by one
-            pd.download_pdf_single(item[0], item[1], PDF_FOLDER_PATH)
+
+    for item in block:
+        # download PDF from last block one by one
+        pd.download_pdf_single(item[0], item[1], PDF_FOLDER_PATH)
 
 print("Finished downloading all PDFs")
 
