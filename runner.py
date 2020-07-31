@@ -9,7 +9,16 @@ CIA_PAGE = """https://www.cia.gov/library/publications/resources/the-world-factb
 links = scrape_pdf_links(CIA_PAGE)  # make dictionary of links for PDF
 print("Downloading PDFs...")
 
-download_pdf(links)  # download PDF to folder "pdf"
+PDF_FOLDER_PATH = "pdf"
+
+if not os.path.exists(PDF_FOLDER_PATH):
+    os.mkdir(PDF_FOLDER_PATH)
+
+
+for country, link in links.items():  # download PDFs to folder "pdf"
+    download_pdf(country, link, PDF_FOLDER_PATH)
+print("Finished downloading all PDFs")
+
 print("Starting scraping PDFs for text...")
 
 data_containers = scrape_pdf('pdf')  # create list with data containers

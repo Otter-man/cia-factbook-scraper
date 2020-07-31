@@ -27,25 +27,19 @@ def scrape_pdf_links(cia_page):
     return links
 
 
-def download_pdf(links):
+def download_pdf(country, link, path_to_folder):
     """Take dict of links and download them in folder 'PDF'.
 
     Args:
-        links (dict): each key in a dict is a country name, each value is
-            a corresponding link to PDF.
+        country (str): name of country.
+        link (str): link to PDF corresponding to country.
+        path_to_folder (str): path to folder for saving PDF.
     """
 
-    if not os.path.exists("pdf"):
-        os.mkdir("pdf")
+    file_name = country + ".pdf"
+    file_path = os.path.join(path_to_folder, file_name)
 
-    for country, link in links.items():
-
-        file_name = country + ".pdf"
-        file_path = os.path.join("pdf", file_name)
-
-        # downloading files using HTMLsession
-        with open(file_path, "wb") as pdf_file:
-            pdf_as_page = HTMLSession().get(link)
-            pdf_file.write(pdf_as_page.content)
-
-    print("Finished downloading all PDFs")
+    # downloading files using HTMLsession
+    with open(file_path, "wb") as pdf_file:
+        pdf_as_page = HTMLSession().get(link)
+        pdf_file.write(pdf_as_page.content)
