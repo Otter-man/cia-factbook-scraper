@@ -1,8 +1,8 @@
 """Main script to run all other modules in project."""
 import os
-import scripts.sqlite_module as sm
-from scripts.pdf_downloader_module import scrape_pdf_links, download_pdf
-from scripts.pdf_scraper_module import scrape_pdf
+import scripts.sqlite as sq
+from scripts.pdf_downloader import scrape_pdf_links, download_pdf
+from scripts.pdf_scraper import scrape_pdf
 
 CIA_PAGE = """https://www.cia.gov/library/publications/resources/the-world-factbook/docs/one_page_summaries.html"""
 
@@ -30,12 +30,12 @@ if not os.path.exists("data"):
 
 DB_FILE = "data/summaries.db"  # path to DB file
 
-sm.create_db(DB_FILE)  # check DB file, create file if it doesn't exist
+sq.create_db(DB_FILE)  # check DB file, create file if it doesn't exist
 print("Finished creating db")
 
-with sm.connect_to_db(DB_FILE) as conn:  # open connection, write to DB
+with sq.connect_to_db(DB_FILE) as conn:  # open connection, write to DB
     cur = conn.cursor()
     for i in zip(tables, data_containers):
-        sm.write_to_db(cur, i[0], i[1])
+        sq.write_to_db(cur, i[0], i[1])
 
 print("Finished filling up db")
