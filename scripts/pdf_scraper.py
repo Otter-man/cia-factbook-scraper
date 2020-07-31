@@ -535,45 +535,32 @@ def format_field_data(field_name):
             [720500.0, 16377742.0, 17098242.0]
         """
         if country == "FRENCH SOUTHERN AND ANTARCTIC LANDS":
-            total, land, water = None, None, None
+            return [None, None, None]
 
-        elif country == "GREENLAND":
-            total = field_data.lower().split("total: ")
-            total = total[1][: total[1].index(
-                " sq km")].replace(",", "")
+        total = field_data.lower().split("total: ")
+        total = total[1][: total[1].index(
+            " sq km")].replace(",", "")
 
-            land = None
-            water = None
+        if country == "GREENLAND":
+            return [None, None, float(total)]
 
-        else:
-            total = field_data.lower().split("total: ")
-            total = total[1][: total[1].index(
-                " sq km")].replace(",", "")
+        land = field_data.lower().split("land")
+        land = land[1][: land[1].index(" sq km")].replace(",", "")
+        land = land.replace(":", "").strip()
+        land = land.replace("-", "")
 
-            land = field_data.lower().split("land")
-            land = land[1][: land[1].index(" sq km")].replace(",", "")
-            land = land.replace(":", "").strip()
-            land = land.replace("-", "")
-
-            if country == "SAUDI ARABIA":
-                total = convert_big_str_numbers(total)
-                land = convert_big_str_numbers(land)
-
-            try:
-                water = field_data.lower().split("water: ")
-                water = water[1][: water[1].index(
-                    " sq km")].replace(",", "")
-            except ValueError:
-                water = "0"
+        if country == "SAUDI ARABIA":
+            total = convert_big_str_numbers(total)
+            land = convert_big_str_numbers(land)
 
         try:
-            total = float(total)
-            land = float(land)
-            water = float(water)
-        except TypeError:
-            pass
+            water = field_data.lower().split("water: ")
+            water = water[1][: water[1].index(
+                " sq km")].replace(",", "")
+        except ValueError:
+            water = "0"
 
-        return [water, land, total]
+        return [float(water), float(land), float(total)]
 
     def gdp_ppp_field(field_data):
         """Take data as str and return it as a list of int.
