@@ -10,7 +10,7 @@ def scrape_pdf_links(cia_page):
         cia_page (str): link to the page, containing PDF files.
 
     Returns:
-        List of lists. Each nested list contains 5 elements, each element
+        List of lists. Each nested list contains 4 elements, each element
         is a list made of two str - country name and link to PDF file.
     """
 
@@ -26,10 +26,10 @@ def scrape_pdf_links(cia_page):
     for country in country_data:
         links_temp.append([country.text, list(country.absolute_links)[0]])
         count += 1
-        if count % 5 == 0:
+        if count % 4 == 0:
             link_blocks.append(links_temp)
             links_temp = []
-        elif count % 5 != 0 and count == len(list(country_data)):
+        elif count % 4 != 0 and count == len(list(country_data)):
             link_blocks.append(links_temp)
 
     return link_blocks
@@ -67,7 +67,6 @@ def download_pdf_multi(block, path_to_folder):
     link2 = block[1][1]
     link3 = block[2][1]
     link4 = block[3][1]
-    link5 = block[4][1]
 
     async def downloader1():
         pdf_as_page = await async_ses.get(link1)
@@ -85,12 +84,8 @@ def download_pdf_multi(block, path_to_folder):
         pdf_as_page = await async_ses.get(link4)
         return pdf_as_page
 
-    async def downloader5():
-        pdf_as_page = await async_ses.get(link5)
-        return pdf_as_page
-
     pages_return = async_ses.run(
-        downloader1, downloader2, downloader3, downloader4, downloader5)
+        downloader1, downloader2, downloader3, downloader4, )
 
     counter = 0
     for page in pages_return:

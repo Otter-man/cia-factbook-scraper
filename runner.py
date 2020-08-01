@@ -9,14 +9,14 @@ CIA_PAGE = """https://www.cia.gov/library/publications/resources/the-world-factb
 links = pd.scrape_pdf_links(CIA_PAGE)  # make list with links for PDF
 print("Downloading PDFs...")
 
-PDF_FOLDER_PATH = "pdf"
+PDF_FOLDER_PATH = "pdf1"
 
 if not os.path.exists(PDF_FOLDER_PATH):
     os.mkdir(PDF_FOLDER_PATH)
 
 for block in links:
-    if len(block) == 5:
-        # download PDF 5 at a time
+    if len(block) == 4:
+        # download PDF 4 at a time
         pd.download_pdf_multi(block, PDF_FOLDER_PATH)
     else:
         for item in block:
