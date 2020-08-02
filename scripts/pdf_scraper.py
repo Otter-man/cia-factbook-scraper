@@ -2,7 +2,7 @@
 import os
 import re
 from pdfminer import high_level, layout
-import scripts.classes as cl
+import scripts.storage_classes as sc
 
 
 def create_index(fields, text_split, country_id):
@@ -1033,33 +1033,33 @@ def scrape_pdf(path_to_pdf):
 
                 if field_name == "Imports":
                     temp_general.extend(temp[0])
-                    temp_list = [cl.CountryImportPartners(
+                    temp_list = [sc.CountryImportPartners(
                         *item) for item in temp[1]]
                     country_import_partners.extend(temp_list)
 
                 elif field_name == "Exports":
                     temp_general.extend(temp[0])
-                    temp_list = [cl.CountryExportPartners(
+                    temp_list = [sc.CountryExportPartners(
                         *item) for item in temp[1]]
                     country_export_partners.extend(temp_list)
 
                 elif field_name == "Ethnicity":
-                    temp_list = [cl.CountryEthnicity(*item) for item in temp]
+                    temp_list = [sc.CountryEthnicity(*item) for item in temp]
                     country_ethnicity.extend(temp_list)
 
                 elif field_name == "Religion":
-                    temp_list = [cl.CountryReligion(*item) for item in temp]
+                    temp_list = [sc.CountryReligion(*item) for item in temp]
                     country_religion.extend(temp_list)
 
                 elif field_name == 'Language':
-                    temp_list = [cl.CountryLanguage(*item) for item in temp]
+                    temp_list = [sc.CountryLanguage(*item) for item in temp]
                     country_language.extend(temp_list)
 
             elif field_name in two_arg_fields:
                 temp = field_func(country_id, field_data)
 
                 if field_name == "Natural Resources":
-                    temp_list = [cl.CountryNaturalResources(
+                    temp_list = [sc.CountryNaturalResources(
                         *item) for item in temp]
                     country_natural_resources.extend(temp_list)
 
@@ -1071,7 +1071,7 @@ def scrape_pdf(path_to_pdf):
                 temp_general.extend(temp)
 
         temp_general.append(country_id)
-        temp_general = cl.CountryGeneral(*temp_general[::-1])
+        temp_general = sc.CountryGeneral(*temp_general[::-1])
         country_general.append(temp_general)
 
     print("Finished scraping PDF")
