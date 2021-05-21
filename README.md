@@ -1,3 +1,7 @@
+# This project is archived due to [CIA-webpage redisign in 2021](https://www.latimes.com/entertainment-arts/story/2021-01-08/the-cia-redesigns-its-logo-and-other-reasons-why-the-governments-graphic-design-needs-work)
+For the first time in many years CIA webpage was updated and this scraper was made obsolete. You can access PDF-files at [CIA new page](https://www.cia.gov/the-world-factbook/references/one-page-country-summaries/) and since PDF a still the same the scraper can be updated to work with them.
+But for now this project is archived.
+
 # CIA factbook one page summaries scraping tool
 
 Script to scrape PDF with one-page summaries of different countries from CIA website.
